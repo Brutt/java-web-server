@@ -1,6 +1,7 @@
 package petrovskyi.webserver.server;
 
 import petrovskyi.webserver.handler.RequestHandler;
+import petrovskyi.webserver.scanner.WebAppWarScanner;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -17,6 +18,9 @@ public class Server {
 
     public void start() {
         service = Executors.newCachedThreadPool();
+
+        service.submit(new WebAppWarScanner());
+
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             while (true) {
