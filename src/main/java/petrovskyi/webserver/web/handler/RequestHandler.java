@@ -1,8 +1,7 @@
-package petrovskyi.webserver.handler;
+package petrovskyi.webserver.web.handler;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
 

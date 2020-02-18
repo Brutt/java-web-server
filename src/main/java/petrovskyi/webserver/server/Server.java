@@ -1,7 +1,9 @@
 package petrovskyi.webserver.server;
 
-import petrovskyi.webserver.handler.RequestHandler;
-import petrovskyi.webserver.scanner.WebAppWarScanner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import petrovskyi.webserver.webapp.director.WebAppDirector;
+import petrovskyi.webserver.web.handler.RequestHandler;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -9,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server {
+    private final Logger LOG = LoggerFactory.getLogger(getClass());
     private int port;
     private ExecutorService service;
 
@@ -17,9 +20,11 @@ public class Server {
     }
 
     public void start() {
+        LOG.info("Server starts");
         service = Executors.newCachedThreadPool();
 
-        service.submit(new WebAppWarScanner());
+        WebAppDirector webAppDirector = new WebAppDirector();
+        webAppDirector.manage();
 
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
@@ -28,18 +33,19 @@ public class Server {
             }
 
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            LOG.error(e.getMessage());
             throw new RuntimeException(e);
         }
 
     }
 
     public void stop() throws InterruptedException {
+        LOG.info("Server is stopping");
         service.shutdown();
 
         Thread.sleep(1000);
 
-        System.out.println("Server is " + (service.isShutdown() ? "shutdown" : "still running"));
+        LOG.info("Server is " + (service.isShutdown() ? "shutdown" : "still running"));
 
         System.exit(0);
     }
