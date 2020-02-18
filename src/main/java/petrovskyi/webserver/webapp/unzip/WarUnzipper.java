@@ -2,6 +2,7 @@ package petrovskyi.webserver.webapp.unzip;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import petrovskyi.webserver.webapp.webxml.WebXmlHandler;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,6 +16,11 @@ import java.util.zip.ZipFile;
 
 public class WarUnzipper {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
+    private WebXmlHandler webXmlHandler;
+
+    public WarUnzipper(WebXmlHandler webXmlHandler) {
+        this.webXmlHandler = webXmlHandler;
+    }
 
     public void unzip(String warName) {
         String zipFileDir = "webapps";
@@ -37,7 +43,7 @@ public class WarUnzipper {
                     throw new IOException("Final " + (entry.isDirectory() ? "directory" : "file") + " output path is invalid: " + destPath);
                 }
 
-                LOG.info((entry.isDirectory() ? "directory: " : "file: ") + entry.getName() + " => " + destPath);
+                LOG.debug("{} => {}", (entry.isDirectory() ? "directory: " : "file: ") + entry.getName(), destPath);
 
                 if (entry.isDirectory()) {
                     File file = new File(destPath);
@@ -60,6 +66,8 @@ public class WarUnzipper {
         }
 
         LOG.info("File: " + zipFilePath + " was unzipped");
+
+        webXmlHandler.parse(unzipDir);
     }
 
     // check Zip Slip attack
