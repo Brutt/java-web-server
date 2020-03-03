@@ -67,7 +67,7 @@ public class WarUnzipper {
 
         LOG.info("File: " + zipFilePath + " was unzipped");
 
-        webXmlHandler.parse(unzipDir);
+        webXmlHandler.handle(unzipDir);
     }
 
     // check Zip Slip attack
