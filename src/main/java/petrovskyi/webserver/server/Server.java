@@ -2,7 +2,7 @@ package petrovskyi.webserver.server;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import petrovskyi.webserver.webapp.director.WebAppDirector;
+import petrovskyi.webserver.webapp.WebAppDirector;
 import petrovskyi.webserver.web.handler.RequestHandler;
 
 import java.io.IOException;
@@ -24,8 +24,7 @@ public class Server {
         service = Executors.newCachedThreadPool();
 
         WebAppDirector webAppDirector = new WebAppDirector();
-        webAppDirector.manage();
-
+        service.submit(() -> webAppDirector.manage());
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             while (true) {

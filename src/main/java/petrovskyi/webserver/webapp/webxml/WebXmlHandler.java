@@ -7,6 +7,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import petrovskyi.webserver.application.creator.ApplicationInfoCreator;
 import petrovskyi.webserver.webapp.entity.ServletDefinition;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -26,6 +27,11 @@ import java.util.stream.Stream;
 
 public class WebXmlHandler {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
+    private ApplicationInfoCreator applicationInfoCreator;
+
+    public WebXmlHandler(ApplicationInfoCreator applicationInfoCreator) {
+        this.applicationInfoCreator = applicationInfoCreator;
+    }
 
     public void handle(String dir) {
         String webXmlPath = find(dir);
@@ -34,7 +40,8 @@ public class WebXmlHandler {
             return;
         }
 
-        parse(webXmlPath);
+        Map<String, String> urlToClassName = parse(webXmlPath);
+        applicationInfoCreator.create(dir, urlToClassName);
     }
 
     String find(String dir) {
@@ -62,8 +69,8 @@ public class WebXmlHandler {
         return null;
     }
 
-    List<ServletDefinition> parse(String webXmlPath) {
-        List<ServletDefinition> servletDefinitions = new ArrayList<>();
+    Map<String, String> parse(String webXmlPath) {
+        Map<String, String> urlToClassName = new HashMap<>();
 
         Map<String, ServletDefinition> servletNameToDefinition = new HashMap<>();
 
@@ -100,7 +107,9 @@ public class WebXmlHandler {
                         ServletDefinition servletDefinition = servletNameToDefinition.get(servletName);
 
                         List<String> servletUrls = getElementValueByName(element, "url-pattern");
-                        servletDefinition.setUrls(servletUrls);
+                        for (String servletUrl : servletUrls) {
+                            urlToClassName.put(servletUrl, servletDefinition.getClassName());
+                        }
 
                         LOG.debug("Found mapping for servlet {} , url {}", servletName, servletUrls);
                     }
@@ -111,11 +120,7 @@ public class WebXmlHandler {
             throw new RuntimeException("Error while parsing web.xml", e);
         }
 
-        for (String key : servletNameToDefinition.keySet()) {
-            servletDefinitions.add(servletNameToDefinition.get(key));
-        }
-
-        return servletDefinitions;
+        return urlToClassName;
     }
 
     List<String> getElementValueByName(Element element, String name) {
