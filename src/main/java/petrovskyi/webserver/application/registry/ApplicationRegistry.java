@@ -1,22 +1,18 @@
 package petrovskyi.webserver.application.registry;
 
-import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import petrovskyi.webserver.application.entity.ApplicationInfo;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ApplicationRegistry {
     private static ApplicationRegistry applicationRegistry;
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-    //test
-    @Getter
-    private Map<String, ApplicationInfo> appNameToApplicationInfo;
+    private Map<String, ApplicationInfo> appNameToApplicationInfo = new ConcurrentHashMap<>();
 
     private ApplicationRegistry() {
-        appNameToApplicationInfo = new HashMap<>();
     }
 
     public static ApplicationRegistry getInstance() {
