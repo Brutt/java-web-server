@@ -7,7 +7,6 @@ import petrovskyi.webserver.application.registry.ApplicationRegistry;
 
 import javax.servlet.http.HttpServlet;
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.HashMap;
@@ -60,7 +59,7 @@ public class ApplicationInfoCreator {
         URL url;
         try {
             url = file.toURI().toURL();
-        } catch (MalformedURLException e) {
+        } catch (Exception e) {
             LOG.error("Error while trying to transform file {} into URL", file, e);
             throw new RuntimeException("Error while trying to transform file " + file + " into URL", e);
         }

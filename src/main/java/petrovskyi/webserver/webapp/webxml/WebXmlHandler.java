@@ -70,8 +70,9 @@ public class WebXmlHandler {
     }
 
     Map<String, String> parse(String webXmlPath) {
-        Map<String, String> urlToClassName = new HashMap<>();
+        LOG.info("Starting to parse {}", webXmlPath);
 
+        Map<String, String> urlToClassName = new HashMap<>();
         Map<String, ServletDefinition> servletNameToDefinition = new HashMap<>();
 
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();

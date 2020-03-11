@@ -24,6 +24,9 @@ public class Server {
         service = Executors.newCachedThreadPool();
 
         WebAppDirector webAppDirector = new WebAppDirector();
+
+        webAppDirector.manageAtStartup();
+
         service.submit(() -> webAppDirector.manage());
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {

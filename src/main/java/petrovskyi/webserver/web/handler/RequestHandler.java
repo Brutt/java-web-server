@@ -11,6 +11,7 @@ import petrovskyi.webserver.web.stream.WebServerOutputStream;
 import javax.servlet.http.HttpServlet;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
@@ -41,12 +42,22 @@ public class RequestHandler implements Runnable {
                     new WebServerOutputStream(socket.getOutputStream()));
 
             ApplicationInfo application = applicationRegistry.getApplication(webServerServletRequest.getAppName());
+            if (application == null) {
+                log.info("Cannot find an application with the name {}", webServerServletRequest.getAppName());
+                return;
+            }
+
             log.info("Request to {} application", application);
 
             String requestURI = webServerServletRequest.getRequestURI();
             log.info("Request to {} endpoint", requestURI);
 
             HttpServlet httpServlet = application.getUrlToServlet().get(requestURI);
+            if (httpServlet == null) {
+                log.info("Cannot find a servlet by URI {}", requestURI);
+                return;
+            }
+
             httpServlet.service(webServerServletRequest, webServerServletResponse);
             webServerServletResponse.flush();
             //hardcode end
@@ -62,10 +73,17 @@ public class RequestHandler implements Runnable {
 //            ResponseWriter responseWriter = new ResponseWriter();
 //            responseWriter.writeSuccessResponse(socketWriter, resource);
 
-            socketWriter.close();
+
         } catch (Exception e) {
             log.error("Error while handling request", e);
             throw new RuntimeException("Error while handling request", e);
+        } finally {
+            try {
+                socketWriter.close();
+            } catch (IOException e) {
+                log.error("Error while closing socket", e);
+                throw new RuntimeException("Error while closing socket", e);
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ package petrovskyi.webserver.webapp.unzip;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import petrovskyi.webserver.webapp.WebAppDirector;
 import petrovskyi.webserver.webapp.webxml.WebXmlHandler;
 
 import java.io.File;
@@ -23,7 +24,7 @@ public class WarUnzipper {
     }
 
     public void unzip(String warName) {
-        String zipFileDir = "webapps";
+        String zipFileDir = WebAppDirector.WEBAPPS_DIR_NAME;
         String zipFilePath = zipFileDir + File.separator + warName;
         String unzipDir = zipFileDir + File.separator + warName.replace(".war", "");
 
