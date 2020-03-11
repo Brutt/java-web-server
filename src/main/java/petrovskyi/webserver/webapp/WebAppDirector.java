@@ -10,7 +10,7 @@ import petrovskyi.webserver.webapp.webxml.WebXmlHandler;
 public class WebAppDirector {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    public void manage(){
+    public void manage() {
         LOG.info("Starting to manage webapps");
 
         ApplicationInfoCreator applicationInfoCreator = new ApplicationInfoCreator();

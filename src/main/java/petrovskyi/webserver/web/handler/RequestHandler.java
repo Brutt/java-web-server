@@ -1,5 +1,6 @@
 package petrovskyi.webserver.web.handler;
 
+import lombok.extern.slf4j.Slf4j;
 import petrovskyi.webserver.application.entity.ApplicationInfo;
 import petrovskyi.webserver.application.registry.ApplicationRegistry;
 import petrovskyi.webserver.web.http.WebServerServletRequest;
@@ -13,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
+@Slf4j
 public class RequestHandler implements Runnable {
     private Socket socket;
     private BufferedReader socketReader;
@@ -25,6 +27,7 @@ public class RequestHandler implements Runnable {
 
     @Override
     public void run() {
+        log.info("Starting to handle new request");
         try {
             socketWriter = new BufferedOutputStream(socket.getOutputStream());
             socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -34,14 +37,19 @@ public class RequestHandler implements Runnable {
 
 
             //hardcode
-            WebServerServletResponse webServerServletResponse = new WebServerServletResponse(new WebServerOutputStream(socket.getOutputStream()));
+            WebServerServletResponse webServerServletResponse = new WebServerServletResponse(
+                    new WebServerOutputStream(socket.getOutputStream()));
 
-            ApplicationInfo simple = applicationRegistry.getApplication("simple");
+            ApplicationInfo application = applicationRegistry.getApplication(webServerServletRequest.getAppName());
+            log.info("Request to {} application", application);
 
-            HttpServlet httpServlet = simple.getUrlToServlet().get("/");
+            String requestURI = webServerServletRequest.getRequestURI();
+            log.info("Request to {} endpoint", requestURI);
+
+            HttpServlet httpServlet = application.getUrlToServlet().get(requestURI);
             httpServlet.service(webServerServletRequest, webServerServletResponse);
+            webServerServletResponse.flush();
             //hardcode end
-
 
 
 //            RequestParser requestParser = new RequestParser();
@@ -56,7 +64,8 @@ public class RequestHandler implements Runnable {
 
             socketWriter.close();
         } catch (Exception e) {
-            System.out.println("Exception: " + e);
+            log.error("Error while handling request", e);
+            throw new RuntimeException("Error while handling request", e);
         }
     }
 }

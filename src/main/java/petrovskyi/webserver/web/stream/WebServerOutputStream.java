@@ -12,6 +12,12 @@ public class WebServerOutputStream extends ServletOutputStream {
 
     public WebServerOutputStream(OutputStream outputStream) {
         this.outputStream = outputStream;
+
+        try {
+            addHeader("HTTP/1.1 200 OK" + END_LINE + END_LINE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -26,8 +32,19 @@ public class WebServerOutputStream extends ServletOutputStream {
 
     @Override
     public void write(int i) throws IOException {
-        outputStream.write(("HTTP/1.1 200 OK" + END_LINE + END_LINE).getBytes());
-        //outputStream.flush();
+        outputStream.write(i);
+    }
+
+    public void addHeader(String header) throws IOException {
+        outputStream.write(header.getBytes());
+    }
+
+    public void close() throws IOException {
+        outputStream.close();
+    }
+
+    public void flush() throws IOException {
+        outputStream.flush();
     }
 
 }
