@@ -7,7 +7,7 @@ import java.util.Map;
 
 @Setter
 public class WebServerServletRequest extends HttpServletRequestAdapter {
-    private String httpMethod;
+    private HttpMethod httpMethod;
     private String uri;
     private Map<String, String> headers;
     private String appName;
@@ -19,7 +19,7 @@ public class WebServerServletRequest extends HttpServletRequestAdapter {
 
     @Override
     public String getMethod() {
-        return httpMethod;
+        return httpMethod.name();
     }
 
     @Override

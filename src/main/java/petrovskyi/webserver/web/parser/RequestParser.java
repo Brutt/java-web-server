@@ -1,11 +1,11 @@
 package petrovskyi.webserver.web.parser;
 
 import lombok.extern.slf4j.Slf4j;
+import petrovskyi.webserver.web.http.HttpMethod;
 import petrovskyi.webserver.web.http.WebServerServletRequest;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,18 +15,18 @@ public class RequestParser {
         log.debug("Starting to parse request");
         WebServerServletRequest request = new WebServerServletRequest();
         String message = socketReader.readLine();
-        injectUriAndHttpMethod(request, message);
+        injectData(request, message);
         injectHeaders(request, socketReader);
 
         return request;
     }
 
-    void injectUriAndHttpMethod(WebServerServletRequest request, String requestLine) {
+    void injectData(WebServerServletRequest request, String requestLine) {
         log.info("Injecting data [{}] into request", requestLine);
         String[] firstLine = requestLine.split(" ");
         String[] uris = firstLine[1].split("/");
 
-        request.setHttpMethod("GET");
+        request.setHttpMethod(HttpMethod.valueOf(firstLine[0]));
         request.setAppName(uris[1]);
         request.setUri(firstLine[1].substring(uris[1].length() + 1));
     }

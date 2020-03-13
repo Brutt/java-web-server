@@ -27,6 +27,11 @@ import java.util.stream.Stream;
 
 public class WebXmlHandler {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
+    private final String WEB_XML = "web.xml";
+    private final String SERVLET_NAME_TAG = "servlet-name";
+    private final String SERVLET_CLASS_TAG = "servlet-class";
+    private final String SERVLET_MAPPING_TAG = "servlet-mapping";
+    private final String URL_PATTERN_TAG = "url-pattern";
     private ApplicationInfoCreator applicationInfoCreator;
 
     public WebXmlHandler(ApplicationInfoCreator applicationInfoCreator) {
@@ -45,25 +50,25 @@ public class WebXmlHandler {
     }
 
     String find(String dir) {
-        LOG.info("Starting to search dir {} to find web.xml", dir);
+        LOG.info("Starting to search dir {} to find {}", dir, WEB_XML);
 
         try (Stream<Path> walk = Files.walk(Paths.get(dir))) {
             List<String> result = walk.map(x -> x.toString())
-                    .filter(x -> x.endsWith("web.xml"))
+                    .filter(x -> x.endsWith(WEB_XML))
                     .collect(Collectors.toList());
 
             if (result.size() == 1) {
-                LOG.info("Found web.xml in {}", result.get(0));
+                LOG.info("Found {} in {}", WEB_XML, result.get(0));
 
                 return result.get(0);
 
             } else {
-                LOG.info("Could not find web.xml in {}", dir);
+                LOG.info("Could not find {} in {}", WEB_XML, dir);
             }
 
         } catch (IOException e) {
-            LOG.error("Error while searching for web.xml in {}", dir, e);
-            throw new RuntimeException("Error while searching for web.xml in " + dir, e);
+            LOG.error("Error while searching for {} in {}", WEB_XML, dir, e);
+            throw new RuntimeException("Error while searching for " + WEB_XML + " in " + dir, e);
         }
 
         return null;
@@ -93,8 +98,8 @@ public class WebXmlHandler {
                     if ("servlet".equals(element.getTagName())) {
                         ServletDefinition servletDefinition = new ServletDefinition();
 
-                        String servletName = getElementValueByName(element, "servlet-name").get(0);
-                        String servletClassName = getElementValueByName(element, "servlet-class").get(0);
+                        String servletName = getElementValueByName(element, SERVLET_NAME_TAG).get(0);
+                        String servletClassName = getElementValueByName(element, SERVLET_CLASS_TAG).get(0);
 
                         servletDefinition.setName(servletName);
                         servletDefinition.setClassName(servletClassName);
@@ -102,12 +107,12 @@ public class WebXmlHandler {
                         servletNameToDefinition.put(servletDefinition.getName(), servletDefinition);
 
                         LOG.debug("Found servlet {} , class {}", servletName, servletClassName);
-                    } else if ("servlet-mapping".equals(element.getTagName())) {
-                        String servletName = getElementValueByName(element, "servlet-name").get(0);
+                    } else if (SERVLET_MAPPING_TAG.equals(element.getTagName())) {
+                        String servletName = getElementValueByName(element, SERVLET_NAME_TAG).get(0);
 
                         ServletDefinition servletDefinition = servletNameToDefinition.get(servletName);
 
-                        List<String> servletUrls = getElementValueByName(element, "url-pattern");
+                        List<String> servletUrls = getElementValueByName(element, URL_PATTERN_TAG);
                         for (String servletUrl : servletUrls) {
                             urlToClassName.put(servletUrl, servletDefinition.getClassName());
                         }
@@ -117,8 +122,8 @@ public class WebXmlHandler {
                 }
             }
         } catch (ParserConfigurationException | SAXException | IOException e) {
-            LOG.error("Error while parsing web.xml", e);
-            throw new RuntimeException("Error while parsing web.xml", e);
+            LOG.error("Error while parsing {}", WEB_XML, e);
+            throw new RuntimeException("Error while parsing " + WEB_XML, e);
         }
 
         return urlToClassName;

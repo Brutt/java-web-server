@@ -36,11 +36,6 @@ public class RequestHandler implements Runnable {
             RequestParser requestParser = new RequestParser();
             WebServerServletRequest webServerServletRequest = requestParser.parseRequest(socketReader);
 
-
-            //hardcode
-            WebServerServletResponse webServerServletResponse = new WebServerServletResponse(
-                    new WebServerOutputStream(socket.getOutputStream()));
-
             ApplicationInfo application = applicationRegistry.getApplication(webServerServletRequest.getAppName());
             if (application == null) {
                 log.info("Cannot find an application with the name {}", webServerServletRequest.getAppName());
@@ -58,21 +53,12 @@ public class RequestHandler implements Runnable {
                 return;
             }
 
+            WebServerOutputStream webServerOutputStream = new WebServerOutputStream(socket.getOutputStream());
+            webServerOutputStream.startGoodOutputStream();
+            WebServerServletResponse webServerServletResponse = new WebServerServletResponse(webServerOutputStream);
+
             httpServlet.service(webServerServletRequest, webServerServletResponse);
             webServerServletResponse.flush();
-            //hardcode end
-
-
-//            RequestParser requestParser = new RequestParser();
-//            requestParser.parseRequest(socketReader);
-//            Request request = requestParser.parseRequest(socketReader);
-//
-//            ResourceReader resourceReader = new ResourceReader();
-//            ByteArrayOutputStream resource = resourceReader.getResource(request.getUri());
-//
-//            ResponseWriter responseWriter = new ResponseWriter();
-//            responseWriter.writeSuccessResponse(socketWriter, resource);
-
 
         } catch (Exception e) {
             log.error("Error while handling request", e);

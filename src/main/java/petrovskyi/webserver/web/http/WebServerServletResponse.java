@@ -8,8 +8,10 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
 public class WebServerServletResponse extends HttpServletResponseAdapter {
+    private final String CHARACTER_ENCODING = "UTF-8";
     private WebServerOutputStream webServerOutputStream;
     private PrintWriter printWriter;
+
 
     public WebServerServletResponse(WebServerOutputStream webServerOutputStream) {
         this.webServerOutputStream = webServerOutputStream;
@@ -17,7 +19,7 @@ public class WebServerServletResponse extends HttpServletResponseAdapter {
 
     @Override
     public String getCharacterEncoding() {
-        return "UTF-8";
+        return CHARACTER_ENCODING;
     }
 
     @Override

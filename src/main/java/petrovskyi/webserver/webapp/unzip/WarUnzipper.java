@@ -26,7 +26,7 @@ public class WarUnzipper {
     public void unzip(String warName) {
         String zipFileDir = WebAppDirector.WEBAPPS_DIR_NAME;
         String zipFilePath = zipFileDir + File.separator + warName;
-        String unzipDir = zipFileDir + File.separator + warName.replace(".war", "");
+        String unzipDir = zipFileDir + File.separator + warName.replace(WebAppDirector.WAR_EXTENSION, "");
 
         LOG.info("Try to unzip file: " + zipFilePath);
 
@@ -40,7 +40,7 @@ public class WarUnzipper {
 
                 String destPath = unzipDir + File.separator + entry.getName();
 
-                if (!isValidDestPath(unzipDir, destPath)) {
+                if (!isValidDestinationPath(unzipDir, destPath)) {
                     throw new IOException("Final " + (entry.isDirectory() ? "directory" : "file") + " output path is invalid: " + destPath);
                 }
 
@@ -72,7 +72,7 @@ public class WarUnzipper {
     }
 
     // check Zip Slip attack
-    private boolean isValidDestPath(String targetDir, String destPathStr) {
+    private boolean isValidDestinationPath(String targetDir, String destPathStr) {
         Path destPath = Paths.get(destPathStr);
         Path destPathNormalized = destPath.normalize();
 

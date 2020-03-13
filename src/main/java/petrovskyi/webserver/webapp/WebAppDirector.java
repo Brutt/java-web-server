@@ -10,6 +10,7 @@ import petrovskyi.webserver.webapp.webxml.WebXmlHandler;
 public class WebAppDirector {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     public static final String WEBAPPS_DIR_NAME = "webapps";
+    public static final String WAR_EXTENSION = ".war";
 
     public void manage() {
         LOG.info("Starting to manage webapps");

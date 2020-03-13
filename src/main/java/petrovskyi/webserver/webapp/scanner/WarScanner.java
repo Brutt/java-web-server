@@ -1,12 +1,14 @@
 package petrovskyi.webserver.webapp.scanner;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import petrovskyi.webserver.webapp.WebAppDirector;
 import petrovskyi.webserver.webapp.unzip.WarUnzipper;
 import petrovskyi.webserver.webapp.webxml.WebXmlHandler;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
@@ -17,7 +19,7 @@ import java.util.stream.Stream;
 
 public class WarScanner {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-    private final String WAR_EXTENSION = ".war";
+
     private WarUnzipper warUnzipper;
 
     public WarScanner(WarUnzipper warUnzipper) {
@@ -31,7 +33,7 @@ public class WarScanner {
         try {
             watchService = FileSystems.getDefault().newWatchService();
 
-            Path path = Paths.get("webapps");
+            Path path = Paths.get(WebAppDirector.WEBAPPS_DIR_NAME);
             path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
         } catch (IOException e) {
             LOG.error(e.getMessage());
@@ -44,7 +46,7 @@ public class WarScanner {
                 for (WatchEvent<?> event : key.pollEvents()) {
 
                     String warName = event.context().toString();
-                    if (warName.endsWith(WAR_EXTENSION)) {
+                    if (warName.endsWith(WebAppDirector.WAR_EXTENSION)) {
                         LOG.info("Catch war: " + event.context());
 
                         warUnzipper.unzip(warName);
@@ -65,7 +67,7 @@ public class WarScanner {
         List<String> archives;
         try (Stream<Path> walk = Files.walk(Paths.get(WebAppDirector.WEBAPPS_DIR_NAME))) {
             archives = walk.map(x -> x.toString())
-                    .filter(x -> x.endsWith(WAR_EXTENSION))
+                    .filter(x -> x.endsWith(WebAppDirector.WAR_EXTENSION))
                     .map(x -> x.replace(WebAppDirector.WEBAPPS_DIR_NAME + "/", ""))
                     .collect(Collectors.toList());
 
@@ -109,7 +111,7 @@ public class WarScanner {
         LOG.info("Start to forward scanned data at startup");
 
         List<String> archivesTemp = new ArrayList<>(archives).stream()
-                .map(x -> x.replace(WAR_EXTENSION, ""))
+                .map(x -> x.replace(WebAppDirector.WAR_EXTENSION, ""))
                 .collect(Collectors.toList());
 
         Collection<String> needProcess = CollectionUtils.intersection(folders, archivesTemp);
@@ -121,11 +123,18 @@ public class WarScanner {
         Collection<String> needUnzip = CollectionUtils.removeAll(archivesTemp, folders);
         for (String warName : needUnzip) {
             LOG.info("War {} need to be unzipped", warName);
-            warUnzipper.unzip(warName + WAR_EXTENSION);
+            warUnzipper.unzip(warName + WebAppDirector.WAR_EXTENSION);
         }
 
-//        Collection<String> needRemove = CollectionUtils.removeAll(folders, archivesTemp);
-//        System.out.println("need to be removed: " + needRemove);
+        Collection<String> needRemove = CollectionUtils.removeAll(folders, archivesTemp);
+        for (String folderName : needRemove) {
+            try {
+                FileUtils.deleteDirectory(new File(WebAppDirector.WEBAPPS_DIR_NAME + "/" + folderName));
+                LOG.info("Folder {} was deleted", folderName);
+            } catch (IOException e) {
+                LOG.error("Error while deleting folder {}", folderName, e);
+            }
+        }
     }
 
 }
