@@ -35,15 +35,22 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <finalName>${artifactId}</finalName>
+                    <appendAssemblyId>false</appendAssemblyId>
+
+                    <outputDirectory>artifact</outputDirectory>
+
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <mainClass>petrovskyi.webserver.Starter</mainClass>
                         </manifest>
                     </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
+
+                    <descriptors>
+                        <descriptor>jar-with-dependencies.xml</descriptor>
+                        <descriptor>assembly.xml</descriptor>
+                    </descriptors>
                 </configuration>
 
             </plugin>
@@ -56,6 +63,7 @@
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>4.0.1</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- set handling -->
