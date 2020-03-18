@@ -1,0 +1,3 @@
+properties:
+  port: 3000
+  thread_count: 10

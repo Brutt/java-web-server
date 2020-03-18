@@ -35,8 +35,8 @@ public class Server {
             }
 
         } catch (IOException e) {
-            LOG.error(e.getMessage());
-            throw new RuntimeException(e);
+            LOG.error("Error while starting the server", e);
+            throw new RuntimeException("Error while starting the server", e);
         }
 
     }

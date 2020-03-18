@@ -66,7 +66,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- set handling -->
+        <!-- to handle set -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
@@ -86,6 +86,13 @@
             <artifactId>lombok</artifactId>
             <version>1.18.8</version>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- yaml -->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.25</version>
         </dependency>
 
         <!-- Logs -->
