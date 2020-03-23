@@ -22,7 +22,7 @@ public class WebAppDirector {
         warScanner.scan();
     }
 
-    public void manageAtStartup(){
+    public void manageAtStartup() {
         LOG.info("Start managing webapps at startup");
 
         ApplicationInfoCreator applicationInfoCreator = new ApplicationInfoCreator();

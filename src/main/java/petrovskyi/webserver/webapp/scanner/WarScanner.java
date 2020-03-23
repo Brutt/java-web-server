@@ -36,13 +36,15 @@ public class WarScanner {
             Path path = Paths.get(WebAppDirector.WEBAPPS_DIR_NAME);
             path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
         } catch (IOException e) {
-            LOG.error(e.getMessage());
-            throw new RuntimeException(e);
+            LOG.error("Error while registering watch service", e);
+            throw new RuntimeException("Error while registering watch service", e);
         }
 
-        try {
-            WatchKey key;
-            while ((key = watchService.take()) != null) {
+        WatchKey key;
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                key = watchService.take();
+
                 for (WatchEvent<?> event : key.pollEvents()) {
 
                     String warName = event.context().toString();
@@ -53,11 +55,21 @@ public class WarScanner {
                     }
                 }
                 key.reset();
+            } catch (InterruptedException e) {
+                LOG.info("Scan was interrupted");
+
+                try {
+                    watchService.close();
+                } catch (IOException ioe) {
+                    LOG.error("Error while closing watch service", ioe);
+                    throw new RuntimeException("Error while closing watch service", ioe);
+                }
+
+                break;
             }
-        } catch (InterruptedException e) {
-            LOG.error(e.getMessage());
-            throw new RuntimeException(e);
         }
+
+        LOG.info("Scan over");
     }
 
     public void scanAtStartUp(WebXmlHandler webXmlHandler) {

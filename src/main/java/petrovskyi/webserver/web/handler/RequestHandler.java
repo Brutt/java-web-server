@@ -16,7 +16,7 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 
 @Slf4j
-public class RequestHandler implements Runnable {
+public class RequestHandler implements Runnable, AutoCloseable {
     private Socket socket;
     private BufferedReader socketReader;
     private BufferedOutputStream socketWriter;
@@ -71,5 +71,10 @@ public class RequestHandler implements Runnable {
                 throw new RuntimeException("Error while closing socket", e);
             }
         }
+    }
+
+    @Override
+    public void close() throws Exception {
+        socket.close();
     }
 }
