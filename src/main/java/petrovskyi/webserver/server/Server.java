@@ -64,7 +64,7 @@ public class Server {
             throw new RuntimeException("Error while starting the server", e);
         }
 
-        LOG.debug("Server stopped");
+        LOG.debug("Server`s start method over");
     }
 
     public void stop() {

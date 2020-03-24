@@ -17,13 +17,8 @@ import java.util.zip.ZipFile;
 
 public class WarUnzipper {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-    private WebXmlHandler webXmlHandler;
 
-    public WarUnzipper(WebXmlHandler webXmlHandler) {
-        this.webXmlHandler = webXmlHandler;
-    }
-
-    public void unzip(String warName) {
+    public String unzip(String warName) {
         String zipFileDir = WebAppDirector.WEBAPPS_DIR_NAME;
         String zipFilePath = zipFileDir + File.separator + warName;
         String unzipDir = zipFileDir + File.separator + warName.replace(WebAppDirector.WAR_EXTENSION, "");
@@ -68,7 +63,7 @@ public class WarUnzipper {
 
         LOG.info("File: " + zipFilePath + " was unzipped");
 
-        webXmlHandler.handle(unzipDir);
+        return unzipDir;
     }
 
     // check Zip Slip attack

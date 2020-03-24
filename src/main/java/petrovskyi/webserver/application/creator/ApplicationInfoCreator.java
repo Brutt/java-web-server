@@ -3,7 +3,7 @@ package petrovskyi.webserver.application.creator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import petrovskyi.webserver.application.entity.ApplicationInfo;
-import petrovskyi.webserver.application.registry.ApplicationRegistry;
+import petrovskyi.webserver.webapp.entity.WebXmlDefinition;
 
 import javax.servlet.http.HttpServlet;
 import java.io.File;
@@ -15,21 +15,20 @@ import java.util.Map;
 public class ApplicationInfoCreator {
     private static final String CLASSES_FOLDER_PATH = "/WEB-INF/classes";
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-    private ApplicationRegistry applicationRegistry = ApplicationRegistry.getInstance();
 
-    public void create(String appDir, Map<String, String> urlToClassName) {
+
+    public ApplicationInfo create(String appDir, WebXmlDefinition webXmlDefinition) {
         String appName = appDir.substring(appDir.lastIndexOf("/") + 1);
         LOG.info("Start to create new application with name {}", appName);
         ClassLoader classLoader = getClassLoader(appDir);
 
-        Map<String, HttpServlet> urlToServlet = transform(urlToClassName, classLoader);
+        Map<String, HttpServlet> urlToServlet = transform(webXmlDefinition.getUrlToClassName(), classLoader);
 
-        ApplicationInfo applicationInfo = new ApplicationInfo();
-        applicationInfo.setUrlToServlet(urlToServlet);
+        ApplicationInfo applicationInfo = new ApplicationInfo(appName, urlToServlet);
 
-        LOG.info("Application {} was successfully created", appName);
+        LOG.info("Application {} was successfully created", applicationInfo.getName());
 
-        applicationRegistry.register(appName, applicationInfo);
+        return applicationInfo;
     }
 
     Map<String, HttpServlet> transform(Map<String, String> urlToClassName, ClassLoader classLoader) {

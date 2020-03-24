@@ -23,9 +23,23 @@ public class ApplicationRegistry {
         return applicationRegistry;
     }
 
-    public void register(String appName, ApplicationInfo applicationInfo) {
-        LOG.info("Application {} was registered", appName);
-        appNameToApplicationInfo.putIfAbsent(appName, applicationInfo);
+    public void register(ApplicationInfo applicationInfo) {
+        LOG.info("Application {} was registered", applicationInfo.getName());
+        appNameToApplicationInfo.put(applicationInfo.getName(), applicationInfo);
+    }
+
+    public ApplicationInfo remove(String appName) {
+        LOG.info("Try to remove application {}", appName);
+
+        ApplicationInfo removed = appNameToApplicationInfo.remove(appName);
+
+        if (removed != null) {
+            LOG.info("Application {} was removed", removed.getName());
+        } else {
+            LOG.info("Cannot find an application {} to remove", appName);
+        }
+
+        return removed;
     }
 
     public ApplicationInfo getApplication(String appName) {

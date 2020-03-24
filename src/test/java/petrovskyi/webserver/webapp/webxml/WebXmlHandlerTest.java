@@ -37,7 +37,7 @@ class WebXmlHandlerTest {
         when(nodeList.item(Mockito.anyInt())).thenReturn(node);
         when(node.getTextContent()).thenReturn("test");
 
-        WebXmlHandler webXmlHandler = new WebXmlHandler(new ApplicationInfoCreator());
+        WebXmlHandler webXmlHandler = new WebXmlHandler();
         List<String> stringList = webXmlHandler.getElementValueByName(element, "test_tag");
 
         assertEquals("test", stringList.get(0));

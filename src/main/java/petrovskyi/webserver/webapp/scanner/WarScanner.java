@@ -1,29 +1,27 @@
 package petrovskyi.webserver.webapp.scanner;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import petrovskyi.webserver.webapp.WebAppDirector;
-import petrovskyi.webserver.webapp.unzip.WarUnzipper;
-import petrovskyi.webserver.webapp.webxml.WebXmlHandler;
+import petrovskyi.webserver.webapp.entity.StartupArchiveAndFolder;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class WarScanner {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
+    private Consumer<String> nextStepConsumer;
 
-    private WarUnzipper warUnzipper;
+    public WarScanner(Consumer<String> nextStepConsumer) {
+        this.nextStepConsumer = nextStepConsumer;
+    }
 
-    public WarScanner(WarUnzipper warUnzipper) {
-        this.warUnzipper = warUnzipper;
+    /* constructor for scanAtStartUp run */
+    public WarScanner() {
     }
 
     public void scan() {
@@ -51,7 +49,7 @@ public class WarScanner {
                     if (warName.endsWith(WebAppDirector.WAR_EXTENSION)) {
                         LOG.info("Catch war: " + event.context());
 
-                        warUnzipper.unzip(warName);
+                        nextStepConsumer.accept(warName);
                     }
                 }
                 key.reset();
@@ -72,7 +70,7 @@ public class WarScanner {
         LOG.info("Scan over");
     }
 
-    public void scanAtStartUp(WebXmlHandler webXmlHandler) {
+    public StartupArchiveAndFolder scanAtStartUp() {
         LOG.info("Start scanning at startup");
 
         LOG.info("Looking for wars");
@@ -116,37 +114,7 @@ public class WarScanner {
             throw new RuntimeException("Error while searching for app folders at startup", e);
         }
 
-        forward(webXmlHandler, folders, archives);
-    }
-
-    private void forward(WebXmlHandler webXmlHandler, List<String> folders, List<String> archives) {
-        LOG.info("Start to forward scanned data at startup");
-
-        List<String> archivesTemp = new ArrayList<>(archives).stream()
-                .map(x -> x.replace(WebAppDirector.WAR_EXTENSION, ""))
-                .collect(Collectors.toList());
-
-        Collection<String> needProcess = CollectionUtils.intersection(folders, archivesTemp);
-        for (String appName : needProcess) {
-            LOG.info("App {} need to be processed", appName);
-            webXmlHandler.handle(WebAppDirector.WEBAPPS_DIR_NAME + "/" + appName);
-        }
-
-        Collection<String> needUnzip = CollectionUtils.removeAll(archivesTemp, folders);
-        for (String warName : needUnzip) {
-            LOG.info("War {} need to be unzipped", warName);
-            warUnzipper.unzip(warName + WebAppDirector.WAR_EXTENSION);
-        }
-
-        Collection<String> needRemove = CollectionUtils.removeAll(folders, archivesTemp);
-        for (String folderName : needRemove) {
-            try {
-                FileUtils.deleteDirectory(new File(WebAppDirector.WEBAPPS_DIR_NAME + "/" + folderName));
-                LOG.info("Folder {} was deleted", folderName);
-            } catch (IOException e) {
-                LOG.error("Error while deleting folder {}", folderName, e);
-            }
-        }
+        return new StartupArchiveAndFolder(archives, folders);
     }
 
 }

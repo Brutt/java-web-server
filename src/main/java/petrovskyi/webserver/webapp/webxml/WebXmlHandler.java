@@ -7,8 +7,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import petrovskyi.webserver.application.creator.ApplicationInfoCreator;
 import petrovskyi.webserver.webapp.entity.ServletDefinition;
+import petrovskyi.webserver.webapp.entity.WebXmlDefinition;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -32,21 +32,17 @@ public class WebXmlHandler {
     private final String SERVLET_CLASS_TAG = "servlet-class";
     private final String SERVLET_MAPPING_TAG = "servlet-mapping";
     private final String URL_PATTERN_TAG = "url-pattern";
-    private ApplicationInfoCreator applicationInfoCreator;
 
-    public WebXmlHandler(ApplicationInfoCreator applicationInfoCreator) {
-        this.applicationInfoCreator = applicationInfoCreator;
-    }
-
-    public void handle(String dir) {
+    public WebXmlDefinition handle(String dir) {
         String webXmlPath = find(dir);
 
         if (webXmlPath == null) {
-            return;
+            return null;
         }
 
         Map<String, String> urlToClassName = parse(webXmlPath);
-        applicationInfoCreator.create(dir, urlToClassName);
+
+        return new WebXmlDefinition(urlToClassName);
     }
 
     String find(String dir) {
