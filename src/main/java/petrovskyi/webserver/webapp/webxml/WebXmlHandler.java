@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 public class WebXmlHandler {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
+    private final String WEB_INF = "WEB-INF";
     private final String WEB_XML = "web.xml";
     private final String SERVLET_NAME_TAG = "servlet-name";
     private final String SERVLET_CLASS_TAG = "servlet-class";
@@ -48,23 +49,16 @@ public class WebXmlHandler {
     String find(String dir) {
         LOG.info("Starting to search dir {} to find {}", dir, WEB_XML);
 
-        try (Stream<Path> walk = Files.walk(Paths.get(dir))) {
-            List<String> result = walk.map(x -> x.toString())
-                    .filter(x -> x.endsWith(WEB_XML))
-                    .collect(Collectors.toList());
+        File webXmlFile = Paths.get(dir, WEB_INF, WEB_XML).toFile();
+        boolean exists = webXmlFile.exists();
 
-            if (result.size() == 1) {
-                LOG.info("Found {} in {}", WEB_XML, result.get(0));
+        if (exists) {
+            LOG.info("Found {} in {}", WEB_XML, webXmlFile);
 
-                return result.get(0);
+            return webXmlFile.getPath();
 
-            } else {
-                LOG.info("Could not find {} in {}", WEB_XML, dir);
-            }
-
-        } catch (IOException e) {
-            LOG.error("Error while searching for {} in {}", WEB_XML, dir, e);
-            throw new RuntimeException("Error while searching for " + WEB_XML + " in " + dir, e);
+        } else {
+            LOG.info("Could not find {} in {}", WEB_XML, dir);
         }
 
         return null;

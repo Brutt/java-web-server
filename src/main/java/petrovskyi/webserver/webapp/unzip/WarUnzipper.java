@@ -2,26 +2,25 @@ package petrovskyi.webserver.webapp.unzip;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import petrovskyi.webserver.webapp.WebAppDirector;
-import petrovskyi.webserver.webapp.webxml.WebXmlHandler;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import static petrovskyi.webserver.webapp.WebAppDirector.*;
 
 public class WarUnzipper {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     public String unzip(String warName) {
-        String zipFileDir = WebAppDirector.WEBAPPS_DIR_NAME;
-        String zipFilePath = zipFileDir + File.separator + warName;
-        String unzipDir = zipFileDir + File.separator + warName.replace(WebAppDirector.WAR_EXTENSION, "");
+        File zipFilePath = new File(WEBAPPS_DIR_NAME, warName);
+        File unzipDir = new File(WEBAPPS_DIR_NAME, warName.replace(WAR_EXTENSION, ""));
 
         LOG.info("Try to unzip file: " + zipFilePath);
 
@@ -33,27 +32,18 @@ public class WarUnzipper {
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
 
-                String destPath = unzipDir + File.separator + entry.getName();
+                File destPath = new File(unzipDir, entry.getName());
 
-                if (!isValidDestinationPath(unzipDir, destPath)) {
+                if (!isValidDestinationPath(unzipDir.getPath(), destPath.getPath())) {
                     throw new IOException("Final " + (entry.isDirectory() ? "directory" : "file") + " output path is invalid: " + destPath);
                 }
 
                 LOG.debug("{} => {}", (entry.isDirectory() ? "directory: " : "file: ") + entry.getName(), destPath);
 
                 if (entry.isDirectory()) {
-                    File file = new File(destPath);
-                    file.mkdirs();
-
+                    destPath.mkdirs();
                 } else {
-                    try (InputStream inputStream = zipFile.getInputStream(entry);
-                         FileOutputStream outputStream = new FileOutputStream(destPath);) {
-                        int data = inputStream.read();
-                        while (data != -1) {
-                            outputStream.write(data);
-                            data = inputStream.read();
-                        }
-                    }
+                    Files.copy(zipFile.getInputStream(entry), destPath.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 }
             }
         } catch (IOException e) {
@@ -63,7 +53,7 @@ public class WarUnzipper {
 
         LOG.info("File: " + zipFilePath + " was unzipped");
 
-        return unzipDir;
+        return unzipDir.getPath();
     }
 
     // check Zip Slip attack
@@ -71,6 +61,6 @@ public class WarUnzipper {
         Path destPath = Paths.get(destPathStr);
         Path destPathNormalized = destPath.normalize();
 
-        return destPathNormalized.toString().startsWith(targetDir + File.separator);
+        return destPathNormalized.startsWith(targetDir + File.separator);
     }
 }    

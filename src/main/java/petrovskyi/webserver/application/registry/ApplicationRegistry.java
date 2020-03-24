@@ -2,9 +2,9 @@ package petrovskyi.webserver.application.registry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import petrovskyi.webserver.application.destroyer.ApplicationInfoDestroyer;
 import petrovskyi.webserver.application.entity.ApplicationInfo;
 
-import javax.servlet.http.HttpServlet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -12,6 +12,7 @@ public class ApplicationRegistry {
     private static ApplicationRegistry applicationRegistry;
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     private Map<String, ApplicationInfo> appNameToApplicationInfo = new ConcurrentHashMap<>();
+    private ApplicationInfoDestroyer applicationInfoDestroyer = new ApplicationInfoDestroyer();
 
     private ApplicationRegistry() {
     }
@@ -35,6 +36,7 @@ public class ApplicationRegistry {
 
         if (removed != null) {
             LOG.info("Application {} was removed", removed.getName());
+            applicationInfoDestroyer.destroyApplication(removed);
         } else {
             LOG.info("Cannot find an application {} to remove", appName);
         }
@@ -46,16 +48,7 @@ public class ApplicationRegistry {
         return appNameToApplicationInfo.get(appName);
     }
 
-    public void destroyAllApplications() {
-        LOG.info("Destroying applications");
-        for (String appNameKey : appNameToApplicationInfo.keySet()) {
-            ApplicationInfo applicationInfo = appNameToApplicationInfo.get(appNameKey);
-            Map<String, HttpServlet> urlToServlet = applicationInfo.getUrlToServlet();
-            for (String urlKey : urlToServlet.keySet()) {
-                HttpServlet httpServlet = urlToServlet.get(urlKey);
-                httpServlet.destroy();
-                LOG.info("Servlet {} was destroyed", httpServlet);
-            }
-        }
+    public void cleanAll(){
+        applicationInfoDestroyer.destroyAllApplications(appNameToApplicationInfo);
     }
 }

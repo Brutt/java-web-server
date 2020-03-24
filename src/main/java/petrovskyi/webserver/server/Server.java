@@ -71,7 +71,7 @@ public class Server {
         LOG.info("Server is stopping now");
         isRunning = false;
 
-        applicationRegistry.destroyAllApplications();
+        applicationRegistry.cleanAll();
 
         service.shutdown();
         try {

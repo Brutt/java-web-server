@@ -44,10 +44,10 @@ public class WarScanner {
                 key = watchService.take();
 
                 for (WatchEvent<?> event : key.pollEvents()) {
-
-                    String warName = event.context().toString();
+                    WatchEvent<Path> eventPath = (WatchEvent<Path>) event;
+                    String warName = eventPath.context().toFile().getPath();
                     if (warName.endsWith(WebAppDirector.WAR_EXTENSION)) {
-                        LOG.info("Catch war: " + event.context());
+                        LOG.info("Catch war: " + warName);
 
                         nextStepConsumer.accept(warName);
                     }
