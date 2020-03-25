@@ -53,7 +53,7 @@ public class ApplicationInfoCreator {
 
     ClassLoader getClassLoader(String appDir) {
         LOG.info("Start to get class loader in folder {}", appDir);
-        File file = new File(appDir + CLASSES_FOLDER_PATH);
+        File file = new File(appDir, CLASSES_FOLDER_PATH);
 
         URL url;
         try {

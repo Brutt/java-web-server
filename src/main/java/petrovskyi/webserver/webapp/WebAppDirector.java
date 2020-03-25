@@ -14,6 +14,7 @@ import petrovskyi.webserver.webapp.unzip.WarUnzipper;
 import petrovskyi.webserver.webapp.webxml.WebXmlHandler;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,16 +50,22 @@ public class WebAppDirector {
     private void unzipAndRegisterNewApplication(String warName) {
         LOG.debug("Start to unzip and register new application based on war archive {}", warName);
 
-        String unzipDir = warUnzipper.unzip(warName);
+        File unzipDir = warUnzipper.unzip(warName);
 
         registerNewApplication(unzipDir);
     }
 
-    private void registerNewApplication(String unzipDir) {
+    private void registerNewApplication(File unzipDir) {
         LOG.debug("Start to create and register new application based on unzipped directory {}", unzipDir);
 
-        WebXmlDefinition webXmlDefinition = webXmlHandler.handle(unzipDir);
-        ApplicationInfo applicationInfo = applicationInfoCreator.create(unzipDir, webXmlDefinition);
+        WebXmlDefinition webXmlDefinition;
+        try {
+            webXmlDefinition = webXmlHandler.handle(unzipDir);
+        } catch (FileNotFoundException e) {
+            LOG.error("Cannot find web.xml in {}", unzipDir);
+            return;
+        }
+        ApplicationInfo applicationInfo = applicationInfoCreator.create(unzipDir.getPath(), webXmlDefinition);
 
         applicationRegistry.register(applicationInfo);
     }
@@ -66,27 +73,28 @@ public class WebAppDirector {
     private void guideAtStartup(StartupArchiveAndFolder startupArchiveAndFolder) {
         LOG.debug("Start to guide scanned data at startup");
 
-        List<String> archivesTemp = new ArrayList<>(startupArchiveAndFolder.getArchives()).stream()
-                .map(x -> x.replace(WebAppDirector.WAR_EXTENSION, ""))
+        List<String> archivesWOExtension = new ArrayList<>(startupArchiveAndFolder.getArchives()).stream()
+                .map(x -> x.replace(WAR_EXTENSION, ""))
                 .collect(Collectors.toList());
 
-        Collection<String> needProcess = CollectionUtils.intersection(startupArchiveAndFolder.getFolders(), archivesTemp);
+        Collection<String> needProcess = CollectionUtils.intersection(startupArchiveAndFolder.getFolders(), archivesWOExtension);
         for (String appName : needProcess) {
-            LOG.info("App {} need to be processed", appName);
-            registerNewApplication(WebAppDirector.WEBAPPS_DIR_NAME + "/" + appName);
+            LOG.debug("App {} need to be processed", appName);
+            registerNewApplication(new File(appName));
         }
 
-        Collection<String> needUnzip = CollectionUtils.removeAll(archivesTemp, startupArchiveAndFolder.getFolders());
+        Collection<String> needUnzip = CollectionUtils.removeAll(archivesWOExtension, startupArchiveAndFolder.getFolders());
         for (String warName : needUnzip) {
-            LOG.info("War {} need to be unzipped", warName);
-            unzipAndRegisterNewApplication(warName + WebAppDirector.WAR_EXTENSION);
+            String trueWarName = warName.replace(WEBAPPS_DIR_NAME + File.separator, "") + WAR_EXTENSION;
+            LOG.debug("War {} need to be unzipped", trueWarName);
+            unzipAndRegisterNewApplication(trueWarName);
         }
 
-        Collection<String> needRemove = CollectionUtils.removeAll(startupArchiveAndFolder.getFolders(), archivesTemp);
+        Collection<String> needRemove = CollectionUtils.removeAll(startupArchiveAndFolder.getFolders(), archivesWOExtension);
         for (String folderName : needRemove) {
             try {
-                FileUtils.deleteDirectory(new File(WebAppDirector.WEBAPPS_DIR_NAME + "/" + folderName));
-                LOG.info("Folder {} was deleted", folderName);
+                FileUtils.deleteDirectory(new File(folderName));
+                LOG.debug("Folder {} was deleted", folderName);
             } catch (IOException e) {
                 LOG.error("Error while deleting folder {}", folderName, e);
             }

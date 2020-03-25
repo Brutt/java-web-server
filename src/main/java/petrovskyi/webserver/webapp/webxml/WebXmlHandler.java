@@ -14,42 +14,38 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
 
 public class WebXmlHandler {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     private final String WEB_INF = "WEB-INF";
     private final String WEB_XML = "web.xml";
+    private final String SERVLET_TAG = "servlet";
     private final String SERVLET_NAME_TAG = "servlet-name";
     private final String SERVLET_CLASS_TAG = "servlet-class";
     private final String SERVLET_MAPPING_TAG = "servlet-mapping";
     private final String URL_PATTERN_TAG = "url-pattern";
+    private DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 
-    public WebXmlDefinition handle(String dir) {
+    public WebXmlDefinition handle(File dir) throws FileNotFoundException {
         String webXmlPath = find(dir);
-
-        if (webXmlPath == null) {
-            return null;
-        }
 
         Map<String, String> urlToClassName = parse(webXmlPath);
 
         return new WebXmlDefinition(urlToClassName);
     }
 
-    String find(String dir) {
+    String find(File dir) throws FileNotFoundException {
         LOG.info("Starting to search dir {} to find {}", dir, WEB_XML);
 
-        File webXmlFile = Paths.get(dir, WEB_INF, WEB_XML).toFile();
+        File webXmlFile = Paths.get(dir.getPath(), WEB_INF, WEB_XML).toFile();
         boolean exists = webXmlFile.exists();
 
         if (exists) {
@@ -58,10 +54,9 @@ public class WebXmlHandler {
             return webXmlFile.getPath();
 
         } else {
-            LOG.info("Could not find {} in {}", WEB_XML, dir);
+            LOG.error("Could not find {} in {}", WEB_XML, dir);
+            throw new FileNotFoundException("Could not find " + WEB_XML + " in " + dir);
         }
-
-        return null;
     }
 
     Map<String, String> parse(String webXmlPath) {
@@ -70,7 +65,6 @@ public class WebXmlHandler {
         Map<String, String> urlToClassName = new HashMap<>();
         Map<String, ServletDefinition> servletNameToDefinition = new HashMap<>();
 
-        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder;
         try {
             builder = builderFactory.newDocumentBuilder();
@@ -85,14 +79,11 @@ public class WebXmlHandler {
                 if (node instanceof Element) {
                     Element element = (Element) node;
 
-                    if ("servlet".equals(element.getTagName())) {
-                        ServletDefinition servletDefinition = new ServletDefinition();
-
+                    if (SERVLET_TAG.equals(element.getTagName())) {
                         String servletName = getElementValueByName(element, SERVLET_NAME_TAG).get(0);
                         String servletClassName = getElementValueByName(element, SERVLET_CLASS_TAG).get(0);
 
-                        servletDefinition.setName(servletName);
-                        servletDefinition.setClassName(servletClassName);
+                        ServletDefinition servletDefinition = new ServletDefinition(servletName, servletClassName);
 
                         servletNameToDefinition.put(servletDefinition.getName(), servletDefinition);
 

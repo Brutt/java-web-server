@@ -18,7 +18,7 @@ import static petrovskyi.webserver.webapp.WebAppDirector.*;
 public class WarUnzipper {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    public String unzip(String warName) {
+    public File unzip(String warName) {
         File zipFilePath = new File(WEBAPPS_DIR_NAME, warName);
         File unzipDir = new File(WEBAPPS_DIR_NAME, warName.replace(WAR_EXTENSION, ""));
 
@@ -53,7 +53,7 @@ public class WarUnzipper {
 
         LOG.info("File: " + zipFilePath + " was unzipped");
 
-        return unzipDir.getPath();
+        return unzipDir;
     }
 
     // check Zip Slip attack

@@ -2,7 +2,6 @@ package petrovskyi.webserver.webapp.scanner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import petrovskyi.webserver.webapp.WebAppDirector;
 import petrovskyi.webserver.webapp.entity.StartupArchiveAndFolder;
 
 import java.io.IOException;
@@ -11,6 +10,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static petrovskyi.webserver.webapp.WebAppDirector.*;
 
 public class WarScanner {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
@@ -31,7 +32,7 @@ public class WarScanner {
         try {
             watchService = FileSystems.getDefault().newWatchService();
 
-            Path path = Paths.get(WebAppDirector.WEBAPPS_DIR_NAME);
+            Path path = Paths.get(WEBAPPS_DIR_NAME);
             path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
         } catch (IOException e) {
             LOG.error("Error while registering watch service", e);
@@ -46,7 +47,7 @@ public class WarScanner {
                 for (WatchEvent<?> event : key.pollEvents()) {
                     WatchEvent<Path> eventPath = (WatchEvent<Path>) event;
                     String warName = eventPath.context().toFile().getPath();
-                    if (warName.endsWith(WebAppDirector.WAR_EXTENSION)) {
+                    if (warName.endsWith(WAR_EXTENSION)) {
                         LOG.info("Catch war: " + warName);
 
                         nextStepConsumer.accept(warName);
@@ -75,18 +76,17 @@ public class WarScanner {
 
         LOG.info("Looking for wars");
         List<String> archives;
-        try (Stream<Path> walk = Files.walk(Paths.get(WebAppDirector.WEBAPPS_DIR_NAME))) {
-            archives = walk.map(x -> x.toString())
-                    .filter(x -> x.endsWith(WebAppDirector.WAR_EXTENSION))
-                    .map(x -> x.replace(WebAppDirector.WEBAPPS_DIR_NAME + "/", ""))
+        try (Stream<Path> walk = Files.walk(Paths.get(WEBAPPS_DIR_NAME), 1)) {
+            archives = walk.map(x -> x.toFile().getPath())
+                    .filter(x -> x.endsWith(WAR_EXTENSION))
                     .collect(Collectors.toList());
 
             if (archives.size() > 0) {
-                for (String archiveName : archives) {
-                    LOG.info("Found war {}", archiveName);
+                for (String archive : archives) {
+                    LOG.info("Found war {}", archive);
                 }
             } else {
-                LOG.info("No wars were found at startup");
+                LOG.debug("No wars were found at startup");
             }
         } catch (IOException e) {
             LOG.error("Error while searching for wars at startup", e);
@@ -95,16 +95,15 @@ public class WarScanner {
 
         LOG.info("Looking for app folders");
         List<String> folders;
-        try (Stream<Path> walk = Files.walk(Paths.get(WebAppDirector.WEBAPPS_DIR_NAME), 1)) {
+        try (Stream<Path> walk = Files.walk(Paths.get(WEBAPPS_DIR_NAME), 1)) {
             folders = walk.filter(x -> Files.isDirectory(x))
-                    .map(x -> x.toString())
-                    .filter(x -> !x.equals(WebAppDirector.WEBAPPS_DIR_NAME))
-                    .map(x -> x.replace(WebAppDirector.WEBAPPS_DIR_NAME + "/", ""))
+                    .map(x -> x.toFile().getPath())
+                    .filter(x -> !x.equals(WEBAPPS_DIR_NAME))
                     .collect(Collectors.toList());
 
             if (folders.size() > 0) {
-                for (String appFolderName : folders) {
-                    LOG.info("Found app folder {}", appFolderName);
+                for (String appFolder : folders) {
+                    LOG.info("Found app folder {}", appFolder);
                 }
             } else {
                 LOG.info("No app folders were found at startup");
