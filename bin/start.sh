@@ -1,1 +1,1 @@
-java -jar java-web-server.jar & echo "var="$! > pid.pid
+java -jar java-web-server.jar -conf application_properties.yml & echo "var="$! > pid.pid

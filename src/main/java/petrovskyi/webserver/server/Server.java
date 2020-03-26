@@ -3,7 +3,7 @@ package petrovskyi.webserver.server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import petrovskyi.webserver.application.registry.ApplicationRegistry;
-import petrovskyi.webserver.util.PropertyRegistry;
+import petrovskyi.webserver.util.PropertyHolder;
 import petrovskyi.webserver.webapp.WebAppDirector;
 import petrovskyi.webserver.web.handler.RequestHandler;
 
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Server {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-    private static ServerProperties serverProperties = PropertyRegistry.getProperty(ServerProperties.class);
+    private static PropertyHolder propertyHolder = PropertyHolder.getInstance();
     private int port;
     private ExecutorService service;
     private ApplicationRegistry applicationRegistry = ApplicationRegistry.getInstance();
@@ -30,7 +30,7 @@ public class Server {
     public void start() {
         LOG.info("Server starts");
 
-        int threadCount = Integer.parseInt(serverProperties.getProperties().get("thread_count"));
+        int threadCount = propertyHolder.getInt("server.thread_count");
         service = Executors.newFixedThreadPool(threadCount, runnable -> {
             Thread thread = new Thread(runnable);
             thread.setName("RequestHandler");

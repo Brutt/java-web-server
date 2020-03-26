@@ -5,23 +5,37 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
-class YamlReader {
+public class YamlReader {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-    private String propertyFileName;
+    private Map<String, Object> properties;
 
-    YamlReader(String propertyFileName) {
-        LOG.info("Prepare to read property file {}", propertyFileName);
-        this.propertyFileName = propertyFileName;
-    }
-
-    <T> T getProperty(Class<T> type) {
-        LOG.info("Read properties for class {}", type);
+    public YamlReader(String propertyFileName) {
+        LOG.debug("Prepare to read property file {}", propertyFileName);
 
         Yaml yaml = new Yaml();
         InputStream inputStream = this.getClass()
                 .getClassLoader()
                 .getResourceAsStream(propertyFileName);
-        return yaml.loadAs(inputStream, type);
+
+        properties = yaml.load(inputStream);
     }
+
+    public YamlReader(InputStream inputStream) {
+        LOG.debug("Prepare to read property from inputStream {}", inputStream);
+
+        Yaml yaml = new Yaml();
+
+        properties = yaml.load(inputStream);
+    }
+
+    public Map<String, Object> getProperties() {
+        LOG.debug("Get all properties");
+
+        return new HashMap<>(properties);
+    }
+
+
 }
