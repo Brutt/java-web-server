@@ -27,8 +27,10 @@ public class RequestParser {
         String[] uris = firstLine[1].split("/");
 
         request.setHttpMethod(HttpMethod.valueOf(firstLine[0]));
-        request.setAppName(uris[1]);
-        request.setUri(firstLine[1].substring(uris[1].length() + 1));
+        if (uris.length > 1) {
+            request.setAppName(uris[1]);
+            request.setUri(firstLine[1].substring(uris[1].length() + 1));
+        }
     }
 
     void injectHeaders(WebServerServletRequest request, BufferedReader socketReader) throws IOException {

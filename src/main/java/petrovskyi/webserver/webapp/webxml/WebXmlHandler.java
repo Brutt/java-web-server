@@ -13,9 +13,7 @@ import petrovskyi.webserver.webapp.entity.WebXmlDefinition;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,8 +57,16 @@ public class WebXmlHandler {
         }
     }
 
-    Map<String, String> parse(String webXmlPath) {
+    private Map<String, String> parse(String webXmlPath) throws FileNotFoundException {
         LOG.info("Starting to parse {}", webXmlPath);
+
+        Map<String, String> urlToClassName = getUrlToClassName(new FileInputStream(webXmlPath));
+
+        return urlToClassName;
+    }
+
+    Map<String, String> getUrlToClassName(InputStream inputStream){
+        LOG.debug("Start to fill urlToClassName map based on inputStream {}", inputStream);
 
         Map<String, String> urlToClassName = new HashMap<>();
         Map<String, ServletDefinition> servletNameToDefinition = new HashMap<>();
@@ -68,7 +74,7 @@ public class WebXmlHandler {
         DocumentBuilder builder;
         try {
             builder = builderFactory.newDocumentBuilder();
-            Document document = builder.parse(new File(webXmlPath));
+            Document document = builder.parse(inputStream);
 
             Element rootElement = document.getDocumentElement();
 
@@ -103,8 +109,8 @@ public class WebXmlHandler {
                 }
             }
         } catch (ParserConfigurationException | SAXException | IOException e) {
-            LOG.error("Error while parsing {}", WEB_XML, e);
-            throw new RuntimeException("Error while parsing " + WEB_XML, e);
+            LOG.error("Error while parsing {}", inputStream, e);
+            throw new RuntimeException("Error while parsing " + inputStream, e);
         }
 
         return urlToClassName;

@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
-public class WebServerServletResponse extends HttpServletResponseAdapter {
+public class WebServerServletResponse extends HttpServletResponseAdapter implements AutoCloseable{
     private final String CHARACTER_ENCODING = "UTF-8";
     private WebServerOutputStream webServerOutputStream;
     private PrintWriter printWriter;
@@ -33,7 +33,4 @@ public class WebServerServletResponse extends HttpServletResponseAdapter {
         printWriter.close();
     }
 
-    public void flush() {
-        printWriter.flush();
-    }
 }

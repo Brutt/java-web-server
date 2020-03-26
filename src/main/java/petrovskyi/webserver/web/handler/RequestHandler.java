@@ -9,17 +9,13 @@ import petrovskyi.webserver.web.parser.RequestParser;
 import petrovskyi.webserver.web.stream.WebServerOutputStream;
 
 import javax.servlet.http.HttpServlet;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
 @Slf4j
-public class RequestHandler implements Runnable, AutoCloseable {
+public class RequestHandler implements Runnable {
     private Socket socket;
-    private BufferedReader socketReader;
-    private BufferedOutputStream socketWriter;
     private ApplicationRegistry applicationRegistry = ApplicationRegistry.getInstance();
 
     public RequestHandler(Socket socket) {
@@ -29,9 +25,7 @@ public class RequestHandler implements Runnable, AutoCloseable {
     @Override
     public void run() {
         log.info("Starting to handle new request");
-        try {
-            socketWriter = new BufferedOutputStream(socket.getOutputStream());
-            socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        try (BufferedReader socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));) {
 
             RequestParser requestParser = new RequestParser();
             WebServerServletRequest webServerServletRequest = requestParser.parseRequest(socketReader);
@@ -55,26 +49,14 @@ public class RequestHandler implements Runnable, AutoCloseable {
 
             WebServerOutputStream webServerOutputStream = new WebServerOutputStream(socket.getOutputStream());
             webServerOutputStream.startGoodOutputStream();
-            WebServerServletResponse webServerServletResponse = new WebServerServletResponse(webServerOutputStream);
-
-            httpServlet.service(webServerServletRequest, webServerServletResponse);
-            webServerServletResponse.flush();
+            try (WebServerServletResponse webServerServletResponse = new WebServerServletResponse(webServerOutputStream);) {
+                httpServlet.service(webServerServletRequest, webServerServletResponse);
+            }
 
         } catch (Exception e) {
             log.error("Error while handling request", e);
             throw new RuntimeException("Error while handling request", e);
-        } finally {
-            try {
-                socketWriter.close();
-            } catch (IOException e) {
-                log.error("Error while closing socket", e);
-                throw new RuntimeException("Error while closing socket", e);
-            }
         }
     }
 
-    @Override
-    public void close() throws Exception {
-        socket.close();
-    }
 }

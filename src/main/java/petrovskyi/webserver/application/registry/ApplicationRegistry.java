@@ -45,10 +45,10 @@ public class ApplicationRegistry {
     }
 
     public ApplicationInfo getApplication(String appName) {
-        return appNameToApplicationInfo.get(appName);
+        return appName == null ? null : appNameToApplicationInfo.get(appName);
     }
 
-    public void cleanAll(){
+    public void cleanAll() {
         applicationInfoDestroyer.destroyAllApplications(appNameToApplicationInfo);
     }
 }
