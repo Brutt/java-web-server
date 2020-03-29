@@ -3,17 +3,27 @@ package petrovskyi.webserver.application.creator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import petrovskyi.webserver.application.entity.ApplicationInfo;
+import petrovskyi.webserver.web.servlet.config.WebServletConfig;
+import petrovskyi.webserver.web.servlet.context.WebServletContext;
 import petrovskyi.webserver.webapp.entity.WebXmlDefinition;
 
 import javax.servlet.http.HttpServlet;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ApplicationInfoCreator {
-    private static final String CLASSES_FOLDER_PATH = "/WEB-INF/classes";
+    private static final String WEB_INF = "WEB-INF";
+    private static final String CLASSES = "classes";
+    private static final String LIB = "lib";
+    private static final String JAR = ".jar";
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
 
@@ -40,6 +50,11 @@ public class ApplicationInfoCreator {
                 Class<?> aClass = classLoader.loadClass(urlToClassName.get(url));
                 HttpServlet httpServlet = (HttpServlet) aClass.getDeclaredConstructor().newInstance();
 
+                WebServletContext webServletContext = new WebServletContext(classLoader);
+                WebServletConfig webServletConfig = new WebServletConfig(webServletContext);
+
+                httpServlet.init(webServletConfig);
+
                 servletMap.put(url, httpServlet);
                 LOG.info("Servlet for class {} was successfully instantiated", aClass);
             } catch (Exception e) {
@@ -53,17 +68,37 @@ public class ApplicationInfoCreator {
 
     ClassLoader getClassLoader(String appDir) {
         LOG.info("Start to get class loader in folder {}", appDir);
-        File file = new File(appDir, CLASSES_FOLDER_PATH);
+        File classDir = Paths.get(appDir, WEB_INF, CLASSES).toFile();
+        File libDir = Paths.get(appDir, WEB_INF, LIB).toFile();
 
-        URL url;
+        URL[] urls;
+
         try {
-            url = file.toURI().toURL();
-        } catch (Exception e) {
-            LOG.error("Error while trying to transform file {} into URL", file, e);
-            throw new RuntimeException("Error while trying to transform file " + file + " into URL", e);
-        }
+            List<URL> urlsList = new ArrayList<>();
 
-        URL[] urls = new URL[]{url};
+            URL classUrl = classDir.toURI().toURL();
+            urlsList.add(classUrl);
+            LOG.debug("{} was added to class loader", classDir);
+
+            try (Stream<Path> walk = Files.walk(libDir.toPath())) {
+                List<File> result = walk.map(Path::toFile)
+                        .filter(x -> x.getName().endsWith(JAR))
+                        .collect(Collectors.toList());
+
+                for (File jarFile : result) {
+                    LOG.debug("JAR-file {} was found and added to class loader", jarFile);
+                    urlsList.add(jarFile.toURI().toURL());
+                }
+            } catch (IOException e) {
+                LOG.error("Error while walking through {} to find jar files", libDir, e);
+                throw new RuntimeException("Error while walking through " + libDir + " to find jar files", e);
+            }
+
+            urls = urlsList.toArray(new URL[0]);
+        } catch (Exception e) {
+            LOG.error("Error while trying to transform file {} into URL", classDir, e);
+            throw new RuntimeException("Error while trying to transform file " + classDir + " into URL", e);
+        }
 
         return new URLClassLoader(urls);
     }

@@ -11,6 +11,7 @@ import java.util.Map;
 @Slf4j
 public class PropertyHolder {
     private static PropertyHolder instance;
+
     private Map<String, Object> properties;
 
     private PropertyHolder() {
@@ -80,4 +81,10 @@ public class PropertyHolder {
 
         return value;
     }
+
+    //test purposes
+    void setProperties(Map<String, Object> properties) {
+        this.properties = properties;
+    }
+
 }

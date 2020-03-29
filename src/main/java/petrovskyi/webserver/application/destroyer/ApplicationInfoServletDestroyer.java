@@ -7,16 +7,8 @@ import petrovskyi.webserver.application.entity.ApplicationInfo;
 import javax.servlet.http.HttpServlet;
 import java.util.Map;
 
-public class ApplicationInfoDestroyer {
+public class ApplicationInfoServletDestroyer {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-
-    public void destroyAllApplications(Map<String, ApplicationInfo> appNameToApplicationInfo) {
-        LOG.info("Destroying applications");
-        for (String appNameKey : appNameToApplicationInfo.keySet()) {
-            ApplicationInfo applicationInfo = appNameToApplicationInfo.get(appNameKey);
-            destroyApplication(applicationInfo);
-        }
-    }
 
     public void destroyApplication(ApplicationInfo applicationInfo) {
         LOG.info("Destroying application {}", applicationInfo.getName());

@@ -2,17 +2,18 @@ package petrovskyi.webserver.application.registry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import petrovskyi.webserver.application.destroyer.ApplicationInfoDestroyer;
+import petrovskyi.webserver.application.destroyer.ApplicationInfoServletDestroyer;
 import petrovskyi.webserver.application.entity.ApplicationInfo;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ApplicationRegistry {
     private static ApplicationRegistry applicationRegistry;
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     private Map<String, ApplicationInfo> appNameToApplicationInfo = new ConcurrentHashMap<>();
-    private ApplicationInfoDestroyer applicationInfoDestroyer = new ApplicationInfoDestroyer();
+    private ApplicationInfoServletDestroyer applicationInfoServletDestroyer = new ApplicationInfoServletDestroyer();
 
     private ApplicationRegistry() {
     }
@@ -36,7 +37,7 @@ public class ApplicationRegistry {
 
         if (removed != null) {
             LOG.info("Application {} was removed", removed.getName());
-            applicationInfoDestroyer.destroyApplication(removed);
+            applicationInfoServletDestroyer.destroyApplication(removed);
         } else {
             LOG.info("Cannot find an application {} to remove", appName);
         }
@@ -49,6 +50,9 @@ public class ApplicationRegistry {
     }
 
     public void cleanAll() {
-        applicationInfoDestroyer.destroyAllApplications(appNameToApplicationInfo);
+        Set<String> keys = appNameToApplicationInfo.keySet();
+        for (String key : keys) {
+            remove(key);
+        }
     }
 }
