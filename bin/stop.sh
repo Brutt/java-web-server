@@ -1,3 +1,3 @@
-source pid.pid
+source process.id
 
 kill -SIGTERM $var

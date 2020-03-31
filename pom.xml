@@ -63,7 +63,13 @@
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>4.0.1</version>
-<!--            <scope>provided</scope>-->
+        </dependency>
+
+        <!-- to assemble test wars -->
+        <dependency>
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-invoker</artifactId>
+            <version>3.0.1</version>
         </dependency>
 
         <!-- to handle set -->

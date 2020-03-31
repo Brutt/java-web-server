@@ -32,7 +32,7 @@ public class ApplicationInfoCreator {
         LOG.info("Start to create new application with name {}", appName);
         ClassLoader classLoader = getClassLoader(appDir);
 
-        Map<String, HttpServlet> urlToServlet = transform(webXmlDefinition.getUrlToClassName(), classLoader);
+        Map<String, HttpServlet> urlToServlet = createUrlToServletMap(webXmlDefinition.getUrlToClassName(), classLoader);
 
         ApplicationInfo applicationInfo = new ApplicationInfo(appName, urlToServlet);
 
@@ -41,7 +41,7 @@ public class ApplicationInfoCreator {
         return applicationInfo;
     }
 
-    Map<String, HttpServlet> transform(Map<String, String> urlToClassName, ClassLoader classLoader) {
+    private Map<String, HttpServlet> createUrlToServletMap(Map<String, String> urlToClassName, ClassLoader classLoader) {
         LOG.info("Start to transform urlToClassName map into urlToServlet");
         Map<String, HttpServlet> servletMap = new HashMap<>();
 
@@ -66,7 +66,7 @@ public class ApplicationInfoCreator {
         return servletMap;
     }
 
-    ClassLoader getClassLoader(String appDir) {
+    private ClassLoader getClassLoader(String appDir) {
         LOG.info("Start to get class loader in folder {}", appDir);
         File classDir = Paths.get(appDir, WEB_INF, CLASSES).toFile();
         File libDir = Paths.get(appDir, WEB_INF, LIB).toFile();

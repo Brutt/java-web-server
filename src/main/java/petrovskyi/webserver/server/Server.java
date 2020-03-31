@@ -54,6 +54,7 @@ public class Server {
             while (true) {
                 Socket accept = serverSocket.accept();
                 if (!isRunning) {
+                    serverSocket.close();
                     break;
                 }
                 service.execute(new RequestHandler(accept));
@@ -85,10 +86,11 @@ public class Server {
         }
 
         try {
-            new Socket(serverSocket.getInetAddress(), serverSocket.getLocalPort()).close();
+            //create new Socket to start process accept() method of serverSocket, thus interrupt it
+            new Socket(serverSocket.getInetAddress(), serverSocket.getLocalPort());
         } catch (IOException e) {
-            LOG.error("Error while trying to close server socket", e);
-            throw new RuntimeException("Error while trying to close server socket", e);
+            LOG.error("Error trying to create new Socket", e);
+            throw new RuntimeException("Error trying to create new Socket", e);
         }
 
         LOG.info("Server is " + (service.isShutdown() ? "shutdown" : "still running"));
