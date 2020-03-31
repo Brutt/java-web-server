@@ -9,15 +9,15 @@
 
     <fileSets>
         <fileSet>
-            <directory>artifact</directory>
-            <outputDirectory></outputDirectory>
+            <directory>${project.build.directory}</directory>
+            <outputDirectory/>
             <includes>
                 <include>${artifactId}.jar</include>
             </includes>
         </fileSet>
         <fileSet>
             <directory>bin</directory>
-            <outputDirectory></outputDirectory>
+            <outputDirectory/>
             <includes>
                 <include>*.sh</include>
                 <include>webapps</include>
@@ -25,9 +25,16 @@
         </fileSet>
         <fileSet>
             <directory>src/main/resources</directory>
-            <outputDirectory></outputDirectory>
+            <outputDirectory/>
             <includes>
                 <include>*.yml</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.build.directory}/lib</directory>
+            <outputDirectory>lib</outputDirectory>
+            <includes>
+                <include>*.jar</include>
             </includes>
         </fileSet>
     </fileSets>

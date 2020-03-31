@@ -20,8 +20,58 @@
                     <target>11</target>
                 </configuration>
             </plugin>
+
             <plugin>
                 <!-- Build an executable JAR -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>petrovskyi.webserver.Starter</mainClass>
+                        </manifest>
+                    </archive>
+                    <finalName>${artifactId}</finalName>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>default-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <!-- put all dependencies to lib folder-->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.1.2</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <!-- assemble an executable JAR and dependencies into tar.gz archive-->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.1.0</version>
@@ -40,19 +90,10 @@
 
                     <outputDirectory>artifact</outputDirectory>
 
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>petrovskyi.webserver.Starter</mainClass>
-                        </manifest>
-                    </archive>
-
                     <descriptors>
-                        <descriptor>jar-with-dependencies.xml</descriptor>
                         <descriptor>assembly.xml</descriptor>
                     </descriptors>
                 </configuration>
-
             </plugin>
         </plugins>
     </build>
