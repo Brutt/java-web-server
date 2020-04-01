@@ -16,7 +16,8 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class TestWarHandler {
-    private String appName = "simple";
+    //private String appName = "simple";
+    private String appName = "simple_post_and_filters";
 
     private void createTestWar() throws MavenInvocationException {
         log.info("Start to create test war");
