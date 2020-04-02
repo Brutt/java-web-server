@@ -1,8 +1,10 @@
-package petrovskyi.webserver.web.http;
+package petrovskyi.webserver.web.http.request;
 
 import lombok.Setter;
-import petrovskyi.webserver.web.http.adapter.HttpServletRequestAdapter;
+import petrovskyi.webserver.web.http.HttpMethod;
+import petrovskyi.webserver.web.http.session.WebServerSession;
 
+import javax.servlet.http.HttpSession;
 import java.util.Map;
 
 @Setter
@@ -11,6 +13,7 @@ public class WebServerServletRequest extends HttpServletRequestAdapter {
     private String uri;
     private Map<String, String> headers;
     private String appName;
+    private WebServerSession webServerSession;
 
     @Override
     public String getHeader(String s) {
@@ -25,6 +28,16 @@ public class WebServerServletRequest extends HttpServletRequestAdapter {
     @Override
     public String getRequestURI() {
         return uri;
+    }
+
+    @Override
+    public String getServletPath() {
+        return uri;
+    }
+
+    @Override
+    public HttpSession getSession() {
+        return webServerSession;
     }
 
     public String getAppName() {

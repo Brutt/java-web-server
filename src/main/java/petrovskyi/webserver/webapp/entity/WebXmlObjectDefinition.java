@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class ServletDefinition {
+public class WebXmlObjectDefinition {
     private String name;
     private String className;
 }

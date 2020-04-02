@@ -7,7 +7,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import petrovskyi.webserver.webapp.entity.ServletDefinition;
+import petrovskyi.webserver.webapp.entity.WebXmlObjectDefinition;
 import petrovskyi.webserver.webapp.entity.WebXmlDefinition;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -26,18 +26,19 @@ public class WebXmlHandler {
     private final String WEB_INF = "WEB-INF";
     private final String WEB_XML = "web.xml";
     private final String SERVLET_TAG = "servlet";
-    private final String SERVLET_NAME_TAG = "servlet-name";
-    private final String SERVLET_CLASS_TAG = "servlet-class";
-    private final String SERVLET_MAPPING_TAG = "servlet-mapping";
+    private final String NAME_TAG = "-name";
+    private final String CLASS_TAG = "-class";
+    private final String MAPPING_TAG = "-mapping";
+    private final String FILTER_TAG = "filter";
     private final String URL_PATTERN_TAG = "url-pattern";
     private DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 
     public WebXmlDefinition handle(File dir) throws FileNotFoundException {
         String webXmlPath = find(dir);
 
-        Map<String, String> urlToClassName = parse(webXmlPath);
+        WebXmlDefinition webXmlDefinition = parse(webXmlPath);
 
-        return new WebXmlDefinition(urlToClassName);
+        return webXmlDefinition;
     }
 
     String find(File dir) throws FileNotFoundException {
@@ -57,19 +58,21 @@ public class WebXmlHandler {
         }
     }
 
-    private Map<String, String> parse(String webXmlPath) throws FileNotFoundException {
+    private WebXmlDefinition parse(String webXmlPath) throws FileNotFoundException {
         LOG.info("Starting to parse {}", webXmlPath);
 
-        Map<String, String> urlToClassName = getUrlToClassName(new FileInputStream(webXmlPath));
+        WebXmlDefinition webXmlDefinition = getWebXmlDefinition(new FileInputStream(webXmlPath));
 
-        return urlToClassName;
+        return webXmlDefinition;
     }
 
-    Map<String, String> getUrlToClassName(InputStream inputStream){
-        LOG.debug("Start to fill urlToClassName map based on inputStream {}", inputStream);
+    WebXmlDefinition getWebXmlDefinition(InputStream inputStream) {
+        LOG.debug("Start to fill webXmlDefinition based on inputStream {}", inputStream);
 
-        Map<String, String> urlToClassName = new HashMap<>();
-        Map<String, ServletDefinition> servletNameToDefinition = new HashMap<>();
+        Map<String, List<String>> urlToServletClassName = new HashMap<>();
+        Map<String, List<String>> urlToFilterClassName = new HashMap<>();
+        Map<String, WebXmlObjectDefinition> servletNameToDefinition = new HashMap<>();
+        Map<String, WebXmlObjectDefinition> filterNameToDefinition = new HashMap<>();
 
         DocumentBuilder builder;
         try {
@@ -86,25 +89,18 @@ public class WebXmlHandler {
                     Element element = (Element) node;
 
                     if (SERVLET_TAG.equals(element.getTagName())) {
-                        String servletName = getElementValueByName(element, SERVLET_NAME_TAG).get(0);
-                        String servletClassName = getElementValueByName(element, SERVLET_CLASS_TAG).get(0);
+                        WebXmlObjectDefinition webXmlObjectDefinition = extractWebXmlObjectDefinition(SERVLET_TAG, element);
+                        servletNameToDefinition.put(webXmlObjectDefinition.getName(), webXmlObjectDefinition);
 
-                        ServletDefinition servletDefinition = new ServletDefinition(servletName, servletClassName);
+                    } else if ((SERVLET_TAG + MAPPING_TAG).equals(element.getTagName())) {
+                        updateMap(SERVLET_TAG, element, servletNameToDefinition, urlToServletClassName);
 
-                        servletNameToDefinition.put(servletDefinition.getName(), servletDefinition);
+                    } else if (FILTER_TAG.equals(element.getTagName())) {
+                        WebXmlObjectDefinition webXmlObjectDefinition = extractWebXmlObjectDefinition(FILTER_TAG, element);
+                        filterNameToDefinition.put(webXmlObjectDefinition.getName(), webXmlObjectDefinition);
 
-                        LOG.debug("Found servlet {} , class {}", servletName, servletClassName);
-                    } else if (SERVLET_MAPPING_TAG.equals(element.getTagName())) {
-                        String servletName = getElementValueByName(element, SERVLET_NAME_TAG).get(0);
-
-                        ServletDefinition servletDefinition = servletNameToDefinition.get(servletName);
-
-                        List<String> servletUrls = getElementValueByName(element, URL_PATTERN_TAG);
-                        for (String servletUrl : servletUrls) {
-                            urlToClassName.put(servletUrl, servletDefinition.getClassName());
-                        }
-
-                        LOG.debug("Found mapping for servlet {} , url {}", servletName, servletUrls);
+                    } else if ((FILTER_TAG + MAPPING_TAG).equals(element.getTagName())) {
+                        updateMap(FILTER_TAG, element, filterNameToDefinition, urlToFilterClassName);
                     }
                 }
             }
@@ -113,7 +109,39 @@ public class WebXmlHandler {
             throw new RuntimeException("Error while parsing " + inputStream, e);
         }
 
-        return urlToClassName;
+        return new WebXmlDefinition(urlToServletClassName, urlToFilterClassName);
+    }
+
+    private WebXmlObjectDefinition extractWebXmlObjectDefinition(String prefix, Element element) {
+        String objectName = getElementValueByName(element, prefix + NAME_TAG).get(0);
+        String objectClassName = getElementValueByName(element, prefix + CLASS_TAG).get(0);
+
+        LOG.debug("Found {} {} , class {}", prefix, objectName, objectClassName);
+
+        return new WebXmlObjectDefinition(objectName, objectClassName);
+    }
+
+    private void updateMap(String prefix,
+                           Element element,
+                           Map<String, WebXmlObjectDefinition> objectNameToDefinition,
+                           Map<String, List<String>> urlToObjectClassName) {
+        String objectName = getElementValueByName(element, prefix + NAME_TAG).get(0);
+
+        WebXmlObjectDefinition webXmlObjectDefinition = objectNameToDefinition.get(objectName);
+
+        List<String> objectUrls = getElementValueByName(element, URL_PATTERN_TAG);
+        for (String objectUrl : objectUrls) {
+            List<String> stringList = urlToObjectClassName.get(objectUrl);
+            if (stringList != null) {
+                stringList.add(webXmlObjectDefinition.getClassName());
+            } else {
+                stringList = new ArrayList<>();
+                stringList.add(webXmlObjectDefinition.getClassName());
+                urlToObjectClassName.put(objectUrl, stringList);
+            }
+        }
+
+        LOG.debug("Found mapping for {} {} , url {}", prefix, objectName, objectUrls);
     }
 
     List<String> getElementValueByName(Element element, String name) {

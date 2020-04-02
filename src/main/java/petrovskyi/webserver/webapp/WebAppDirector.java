@@ -26,9 +26,13 @@ public class WebAppDirector {
     public static final String WEBAPPS_DIR_NAME = "webapps";
     public static final String WAR_EXTENSION = ".war";
     private ApplicationInfoCreator applicationInfoCreator = new ApplicationInfoCreator();
-    private ApplicationRegistry applicationRegistry = ApplicationRegistry.getInstance();
+    private ApplicationRegistry applicationRegistry;
     private WebXmlHandler webXmlHandler = new WebXmlHandler();
     private WarUnzipper warUnzipper = new WarUnzipper();
+
+    public WebAppDirector(ApplicationRegistry applicationRegistry) {
+        this.applicationRegistry = applicationRegistry;
+    }
 
     public void manage() {
         LOG.info("Starting to manage webapps");

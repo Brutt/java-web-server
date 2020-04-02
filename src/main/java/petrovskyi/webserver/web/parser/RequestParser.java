@@ -2,7 +2,8 @@ package petrovskyi.webserver.web.parser;
 
 import lombok.extern.slf4j.Slf4j;
 import petrovskyi.webserver.web.http.HttpMethod;
-import petrovskyi.webserver.web.http.WebServerServletRequest;
+import petrovskyi.webserver.web.http.request.WebServerServletRequest;
+import petrovskyi.webserver.web.http.session.WebServerSession;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,6 +18,7 @@ public class RequestParser {
         String message = socketReader.readLine();
         injectData(request, message);
         injectHeaders(request, socketReader);
+        injectSession(request);
 
         return request;
     }
@@ -45,5 +47,9 @@ public class RequestParser {
         }
 
         request.setHeaders(headers);
+    }
+
+    void injectSession(WebServerServletRequest request) {
+        request.setWebServerSession(new WebServerSession());
     }
 }

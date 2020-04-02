@@ -7,6 +7,7 @@ import javax.servlet.WriteListener;
 import java.io.IOException;
 import java.io.OutputStream;
 
+
 @Slf4j
 public class WebServerOutputStream extends ServletOutputStream {
     //
@@ -15,7 +16,9 @@ public class WebServerOutputStream extends ServletOutputStream {
     //
     private final String END_LINE = "\r\n";
     private final String GOOD_HEADER = "HTTP/1.1 200 OK";
-    private OutputStream outputStream;
+    private final OutputStream outputStream;
+    private String contentType;
+    private boolean isHeaderAdded = false;
 
     public WebServerOutputStream(OutputStream outputStream) {
         this.outputStream = outputStream;
@@ -33,23 +36,43 @@ public class WebServerOutputStream extends ServletOutputStream {
 
     @Override
     public void write(int i) throws IOException {
+        if (!isHeaderAdded) {
+            addHeader(contentType);
+            endHeaders();
+        }
+        isHeaderAdded = true;
+
         outputStream.write(i);
     }
 
     public void startGoodOutputStream() {
         try {
-            addHeader(GOOD_HEADER + END_LINE + END_LINE);
+            addHeader(GOOD_HEADER);
         } catch (IOException e) {
             log.error("Error while starting good output stream", e);
         }
     }
 
+    public void setContentType(String s) {
+        contentType = "Content-Type: " + s;
+    }
+
+    public void endHeaders() {
+        try {
+            outputStream.write(END_LINE.getBytes());
+        } catch (IOException e) {
+            log.error("Error ending headers part", e);
+        }
+    }
+
     public void addHeader(String header) throws IOException {
-        outputStream.write(header.getBytes());
+        outputStream.write((header + END_LINE).getBytes());
     }
 
     public void close() throws IOException {
-        outputStream.close();
+        try (outputStream) {
+            flush();
+        }
     }
 
     public void flush() throws IOException {

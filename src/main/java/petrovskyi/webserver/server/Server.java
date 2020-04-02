@@ -19,7 +19,7 @@ public class Server {
     private static PropertyHolder propertyHolder = PropertyHolder.getInstance();
     private int port;
     private ExecutorService service;
-    private ApplicationRegistry applicationRegistry = ApplicationRegistry.getInstance();
+    private ApplicationRegistry applicationRegistry = new ApplicationRegistry();
     private volatile boolean isRunning = true;
     private ServerSocket serverSocket;
 
@@ -39,7 +39,7 @@ public class Server {
             return thread;
         });
 
-        WebAppDirector webAppDirector = new WebAppDirector();
+        WebAppDirector webAppDirector = new WebAppDirector(applicationRegistry);
 
         webAppDirector.manageAtStartup();
 
@@ -57,7 +57,7 @@ public class Server {
                     serverSocket.close();
                     break;
                 }
-                service.execute(new RequestHandler(accept));
+                service.execute(new RequestHandler(accept, applicationRegistry));
             }
 
         } catch (IOException e) {

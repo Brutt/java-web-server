@@ -14,7 +14,7 @@ import java.util.HashMap;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ApplicationRegistryTest {
-    private ApplicationRegistry applicationRegistry = ApplicationRegistry.getInstance();
+    private ApplicationRegistry applicationRegistry = new ApplicationRegistry();
     private HttpServlet httpServlet1 = new HttpServlet() {
         @Override
         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -33,12 +33,12 @@ class ApplicationRegistryTest {
         HashMap<String, HttpServlet> urlToServlet = new HashMap<>();
         urlToServlet.put("servlet1", httpServlet1);
         urlToServlet.put("servlet2", httpServlet2);
-        ApplicationInfo applicationInfo1 = new ApplicationInfo("test1", urlToServlet);
+        ApplicationInfo applicationInfo1 = new ApplicationInfo("test1", urlToServlet, null);
         applicationRegistry.register(applicationInfo1);
 
         HashMap<String, HttpServlet> urlToServlet2 = new HashMap<>();
         urlToServlet2.put("servlet2", httpServlet2);
-        ApplicationInfo applicationInfo2 = new ApplicationInfo("test2", urlToServlet2);
+        ApplicationInfo applicationInfo2 = new ApplicationInfo("test2", urlToServlet2, null);
         applicationRegistry.register(applicationInfo2);
     }
 

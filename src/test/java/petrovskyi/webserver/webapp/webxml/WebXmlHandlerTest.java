@@ -8,7 +8,7 @@ import org.mockito.MockitoAnnotations;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import petrovskyi.webserver.application.creator.ApplicationInfoCreator;
+import petrovskyi.webserver.webapp.entity.WebXmlDefinition;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
@@ -68,10 +68,11 @@ class WebXmlHandlerTest {
 
         WebXmlHandler webXmlHandler = new WebXmlHandler();
 
-        Map<String, String> urlToClassName = webXmlHandler.getUrlToClassName(new ByteArrayInputStream(mockWebXml.getBytes()));
+        WebXmlDefinition webXmlDefinition = webXmlHandler.getWebXmlDefinition(new ByteArrayInputStream(mockWebXml.getBytes()));
+        Map<String, List<String>> urlToServletClassName = webXmlDefinition.getUrlToServletClassName();
 
-        assertEquals(2, urlToClassName.size());
-        assertEquals("petrovskyi.web.HelloServlet", urlToClassName.get("/"));
-        assertEquals("petrovskyi.web.HelloServlet", urlToClassName.get("/hello"));
+        assertEquals(2, urlToServletClassName.size());
+        assertEquals("petrovskyi.web.HelloServlet", urlToServletClassName.get("/").get(0));
+        assertEquals("petrovskyi.web.HelloServlet", urlToServletClassName.get("/hello").get(0));
     }
 }

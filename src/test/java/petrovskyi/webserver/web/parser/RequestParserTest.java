@@ -2,7 +2,7 @@ package petrovskyi.webserver.web.parser;
 
 import org.junit.jupiter.api.Test;
 import petrovskyi.webserver.web.http.HttpMethod;
-import petrovskyi.webserver.web.http.WebServerServletRequest;
+import petrovskyi.webserver.web.http.request.WebServerServletRequest;
 
 import static org.junit.jupiter.api.Assertions.*;
 

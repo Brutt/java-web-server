@@ -2,28 +2,18 @@ package petrovskyi.webserver.application.registry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import petrovskyi.webserver.application.destroyer.ApplicationInfoServletDestroyer;
 import petrovskyi.webserver.application.entity.ApplicationInfo;
 
+import javax.servlet.Filter;
+import javax.servlet.http.HttpServlet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ApplicationRegistry {
-    private static ApplicationRegistry applicationRegistry;
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     private Map<String, ApplicationInfo> appNameToApplicationInfo = new ConcurrentHashMap<>();
-    private ApplicationInfoServletDestroyer applicationInfoServletDestroyer = new ApplicationInfoServletDestroyer();
-
-    private ApplicationRegistry() {
-    }
-
-    public static ApplicationRegistry getInstance() {
-        if (applicationRegistry == null) {
-            applicationRegistry = new ApplicationRegistry();
-        }
-        return applicationRegistry;
-    }
 
     public void register(ApplicationInfo applicationInfo) {
         LOG.info("Application {} was registered", applicationInfo.getName());
@@ -37,7 +27,7 @@ public class ApplicationRegistry {
 
         if (removed != null) {
             LOG.info("Application {} was removed", removed.getName());
-            applicationInfoServletDestroyer.destroyApplication(removed);
+            destroyServletsAndFilters(removed);
         } else {
             LOG.info("Cannot find an application {} to remove", appName);
         }
@@ -53,6 +43,25 @@ public class ApplicationRegistry {
         Set<String> keys = appNameToApplicationInfo.keySet();
         for (String key : keys) {
             remove(key);
+        }
+    }
+
+    private void destroyServletsAndFilters(ApplicationInfo applicationInfo) {
+        LOG.info("Destroying application`s servlets and filters {}", applicationInfo.getName());
+
+        Map<String, HttpServlet> urlToServlet = applicationInfo.getUrlToServlet();
+        for (String urlKey : urlToServlet.keySet()) {
+            HttpServlet httpServlet = urlToServlet.get(urlKey);
+            httpServlet.destroy();
+            LOG.debug("Servlet {} was destroyed", httpServlet);
+        }
+
+        Map<String, List<Filter>> urlToFilter = applicationInfo.getUrlToFilters();
+        for (String urlKey : urlToFilter.keySet()) {
+            for (Filter filter : urlToFilter.get(urlKey)) {
+                filter.destroy();
+                LOG.debug("Filter {} was destroyed", filter);
+            }
         }
     }
 }

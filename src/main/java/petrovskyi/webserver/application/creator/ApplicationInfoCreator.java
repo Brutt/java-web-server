@@ -7,6 +7,7 @@ import petrovskyi.webserver.web.servlet.config.WebServletConfig;
 import petrovskyi.webserver.web.servlet.context.WebServletContext;
 import petrovskyi.webserver.webapp.entity.WebXmlDefinition;
 
+import javax.servlet.Filter;
 import javax.servlet.http.HttpServlet;
 import java.io.File;
 import java.io.IOException;
@@ -32,22 +33,23 @@ public class ApplicationInfoCreator {
         LOG.info("Start to create new application with name {}", appName);
         ClassLoader classLoader = getClassLoader(appDir);
 
-        Map<String, HttpServlet> urlToServlet = createUrlToServletMap(webXmlDefinition.getUrlToClassName(), classLoader);
+        Map<String, HttpServlet> urlToServlet = createUrlToServletMap(webXmlDefinition.getUrlToServletClassName(), classLoader);
+        Map<String, List<Filter>> urlToFilters = createUrlToFiltersMap(webXmlDefinition.getUrlToFiltersClassName(), classLoader);
 
-        ApplicationInfo applicationInfo = new ApplicationInfo(appName, urlToServlet);
+        ApplicationInfo applicationInfo = new ApplicationInfo(appName, urlToServlet, urlToFilters);
 
         LOG.info("Application {} was successfully created", applicationInfo.getName());
 
         return applicationInfo;
     }
 
-    private Map<String, HttpServlet> createUrlToServletMap(Map<String, String> urlToClassName, ClassLoader classLoader) {
+    private Map<String, HttpServlet> createUrlToServletMap(Map<String, List<String>> urlToClassName, ClassLoader classLoader) {
         LOG.info("Start to transform urlToClassName map into urlToServlet");
         Map<String, HttpServlet> servletMap = new HashMap<>();
 
         for (String url : urlToClassName.keySet()) {
             try {
-                Class<?> aClass = classLoader.loadClass(urlToClassName.get(url));
+                Class<?> aClass = classLoader.loadClass(urlToClassName.get(url).get(0));
                 HttpServlet httpServlet = (HttpServlet) aClass.getDeclaredConstructor().newInstance();
 
                 WebServletContext webServletContext = new WebServletContext(classLoader);
@@ -64,6 +66,34 @@ public class ApplicationInfoCreator {
         }
 
         return servletMap;
+    }
+
+    private Map<String, List<Filter>> createUrlToFiltersMap(Map<String, List<String>> urlToClassName, ClassLoader classLoader) {
+        LOG.info("Start to transform urlToClassName map into urlToFilters");
+        Map<String, List<Filter>> filtersMap = new HashMap<>();
+
+        for (String url : urlToClassName.keySet()) {
+            for (String filterClassName : urlToClassName.get(url)) {
+                try {
+                    Class<?> aClass = classLoader.loadClass(filterClassName);
+                    Filter filter = (Filter) aClass.getDeclaredConstructor().newInstance();
+
+                    List<Filter> filterList = filtersMap.get(url);
+                    if (filterList == null) {
+                        filterList = new ArrayList<>();
+                    }
+                    filterList.add(filter);
+
+                    filtersMap.put(url, filterList);
+                    LOG.info("Filter for class {} was successfully instantiated", aClass);
+                } catch (Exception e) {
+                    LOG.error("Error while trying to get filter", e);
+                    throw new RuntimeException("Error while trying to get filter", e);
+                }
+            }
+        }
+
+        return filtersMap;
     }
 
     private ClassLoader getClassLoader(String appDir) {

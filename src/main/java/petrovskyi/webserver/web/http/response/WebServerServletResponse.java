@@ -1,14 +1,14 @@
-package petrovskyi.webserver.web.http;
+package petrovskyi.webserver.web.http.response;
 
-import petrovskyi.webserver.web.http.adapter.HttpServletResponseAdapter;
 import petrovskyi.webserver.web.stream.WebServerOutputStream;
 
+import javax.servlet.ServletOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
 public class WebServerServletResponse extends HttpServletResponseAdapter implements AutoCloseable{
-    private final String CHARACTER_ENCODING = "UTF-8";
+    private String characterEncoding = "UTF-8";
     private WebServerOutputStream webServerOutputStream;
     private PrintWriter printWriter;
 
@@ -19,7 +19,12 @@ public class WebServerServletResponse extends HttpServletResponseAdapter impleme
 
     @Override
     public String getCharacterEncoding() {
-        return CHARACTER_ENCODING;
+        return characterEncoding;
+    }
+
+    @Override
+    public ServletOutputStream getOutputStream() {
+        return webServerOutputStream;
     }
 
     @Override
@@ -27,6 +32,16 @@ public class WebServerServletResponse extends HttpServletResponseAdapter impleme
         printWriter = new PrintWriter(new OutputStreamWriter(webServerOutputStream, this.getCharacterEncoding()));
 
         return printWriter;
+    }
+
+    @Override
+    public void setCharacterEncoding(String s) {
+        characterEncoding = s;
+    }
+
+    @Override
+    public void setContentType(String s) {
+        webServerOutputStream.setContentType(s);
     }
 
     public void close() {

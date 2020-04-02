@@ -1,4 +1,4 @@
-package petrovskyi.webserver.web.http.adapter;
+package petrovskyi.webserver.web.http.response;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;

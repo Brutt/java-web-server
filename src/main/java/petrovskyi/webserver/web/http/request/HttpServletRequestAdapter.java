@@ -1,4 +1,4 @@
-package petrovskyi.webserver.web.http.adapter;
+package petrovskyi.webserver.web.http.request;
 
 import lombok.Setter;
 
