@@ -9,7 +9,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PropertyHolderTest {
-    private PropertyHolder propertyHolder = PropertyHolder.getInstance();
+    private PropertyHolder propertyHolder = new PropertyHolder();
 
     @BeforeEach
     void setUp() {
@@ -51,7 +51,7 @@ class PropertyHolderTest {
 
     @Test
     void getProperty() {
-        Map<String, Object>  test2Map = (Map<String, Object>) propertyHolder.getProperty("test2");
+        Map<String, Object> test2Map = (Map<String, Object>) propertyHolder.getProperty("test2");
         assertEquals(2, test2Map.size());
         assertEquals(3000, test2Map.get("test21"));
         assertEquals("how are you?", test2Map.get("test22"));

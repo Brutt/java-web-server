@@ -44,7 +44,7 @@ public class ApplicationInfoCreator {
     }
 
     private Map<String, HttpServlet> createUrlToServletMap(Map<String, List<String>> urlToClassName, ClassLoader classLoader) {
-        LOG.info("Start to transform urlToClassName map into urlToServlet");
+        LOG.debug("Start to transform urlToClassName map into urlToServlet");
         Map<String, HttpServlet> servletMap = new HashMap<>();
 
         for (String url : urlToClassName.keySet()) {
@@ -58,7 +58,7 @@ public class ApplicationInfoCreator {
                 httpServlet.init(webServletConfig);
 
                 servletMap.put(url, httpServlet);
-                LOG.info("Servlet for class {} was successfully instantiated", aClass);
+                LOG.debug("Servlet for class {} was successfully instantiated", aClass);
             } catch (Exception e) {
                 LOG.error("Error while trying to get servlet", e);
                 throw new RuntimeException("Error while trying to get servlet", e);
@@ -69,7 +69,7 @@ public class ApplicationInfoCreator {
     }
 
     private Map<String, List<Filter>> createUrlToFiltersMap(Map<String, List<String>> urlToClassName, ClassLoader classLoader) {
-        LOG.info("Start to transform urlToClassName map into urlToFilters");
+        LOG.debug("Start to transform urlToClassName map into urlToFilters");
         Map<String, List<Filter>> filtersMap = new HashMap<>();
 
         for (String url : urlToClassName.keySet()) {
@@ -85,7 +85,7 @@ public class ApplicationInfoCreator {
                     filterList.add(filter);
 
                     filtersMap.put(url, filterList);
-                    LOG.info("Filter for class {} was successfully instantiated", aClass);
+                    LOG.debug("Filter for class {} was successfully instantiated", aClass);
                 } catch (Exception e) {
                     LOG.error("Error while trying to get filter", e);
                     throw new RuntimeException("Error while trying to get filter", e);
@@ -97,7 +97,7 @@ public class ApplicationInfoCreator {
     }
 
     private ClassLoader getClassLoader(String appDir) {
-        LOG.info("Start to get class loader in folder {}", appDir);
+        LOG.debug("Start to get class loader in folder {}", appDir);
         File classDir = Paths.get(appDir, WEB_INF, CLASSES).toFile();
         File libDir = Paths.get(appDir, WEB_INF, LIB).toFile();
 

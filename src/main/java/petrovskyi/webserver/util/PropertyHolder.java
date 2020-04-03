@@ -10,19 +10,7 @@ import java.util.Map;
 
 @Slf4j
 public class PropertyHolder {
-    private static PropertyHolder instance;
-
     private Map<String, Object> properties;
-
-    private PropertyHolder() {
-    }
-
-    public static PropertyHolder getInstance() {
-        if (instance == null) {
-            instance = new PropertyHolder();
-        }
-        return instance;
-    }
 
     public void readPropertyFileFromResources(String fileName) {
         properties = new YamlReader(fileName).getProperties();

@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Server {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-    private static PropertyHolder propertyHolder = PropertyHolder.getInstance();
+    private PropertyHolder propertyHolder;
     private int port;
     private ExecutorService service;
     private ApplicationRegistry applicationRegistry = new ApplicationRegistry();
@@ -25,8 +25,9 @@ public class Server {
     private volatile boolean isRunning = true;
     private ServerSocket serverSocket;
 
-    public Server(int port) {
+    public Server(int port, PropertyHolder propertyHolder) {
         this.port = port;
+        this.propertyHolder = propertyHolder;
     }
 
     public void start() {

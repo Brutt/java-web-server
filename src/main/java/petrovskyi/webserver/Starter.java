@@ -10,14 +10,14 @@ import java.io.FileNotFoundException;
 
 @Slf4j
 class Starter {
-    private static PropertyHolder propertyHolder;
+    private static PropertyHolder propertyHolder = new PropertyHolder();
 
     public static void main(String[] args) {
         log.info("Starting the main method");
 
         initializeProperties(args);
 
-        Server server = new Server(propertyHolder.getInt("server.port"));
+        Server server = new Server(propertyHolder.getInt("server.port"), propertyHolder);
 
         Signal.handle(new Signal("TERM"), signal -> {
             log.info("Terminate signal {} ({}) interrupted program execution", signal.getName(), signal.getNumber());
@@ -40,7 +40,6 @@ class Starter {
         if (indexOfConfig != -1 && args.length > 1) {
             String configFileName = args[indexOfConfig + 1];
             log.debug("Config file {} was passed as an argument to Main method", configFileName);
-            propertyHolder = PropertyHolder.getInstance();
             try {
                 propertyHolder.readPropertyFileFromFS(configFileName);
             } catch (FileNotFoundException e) {
@@ -49,7 +48,6 @@ class Starter {
             }
         } else {
             log.debug("Reading properties from default config file");
-            propertyHolder = PropertyHolder.getInstance();
             propertyHolder.readPropertyFileFromResources("application_properties.yml");
         }
     }

@@ -33,7 +33,7 @@ public class RequestParser {
     }
 
     void injectData(WebServerServletRequest request, String requestLine) {
-        log.info("Injecting data [{}] into request", requestLine);
+        log.debug("Injecting data [{}] into request", requestLine);
         String[] firstLine = requestLine.split(" ");
         String[] uris = firstLine[1].split("/");
 
@@ -45,7 +45,7 @@ public class RequestParser {
     }
 
     void injectHeaders(WebServerServletRequest request, BufferedReader socketReader) throws IOException {
-        log.info("Injecting headers into request");
+        log.debug("Injecting headers into request");
         Map<String, String> headers = new HashMap<>();
         String message;
         while (!(message = socketReader.readLine()).equals("")) {
@@ -55,13 +55,11 @@ public class RequestParser {
             log.debug("Injecting header {} with value {} into request", key, value);
         }
 
-        headers.put("Cache-Control", "no-store");
-
         request.setHeaders(headers);
     }
 
     void injectBody(WebServerServletRequest request, BufferedReader socketReader) throws IOException {
-
+        log.debug("Injecting body into request");
         String contentLength = request.getHeader("Content-Length");
         if (contentLength == null || Integer.parseInt(contentLength) == 0) {
             return;
@@ -80,16 +78,19 @@ public class RequestParser {
         }
 
         request.setParameters(parameterMap);
+
+        log.debug("Map with parameters {} was injected", parameterMap);
     }
 
     void injectSession(WebServerServletRequest request) {
+        log.debug("Injecting session into request");
         WebServerSession webServerSession = null;
         String cookies = request.getHeader("Cookie");
         if (cookies != null) {
             String[] cookieSplit = cookies.split("; ");
             for (String cookie : cookieSplit) {
                 String[] keyValue = cookie.split("=");
-                if (keyValue[0].equals("SESSIONID")) {
+                if (WebServerSession.SESSIONID.equals(keyValue[0])) {
                     webServerSession = sessionRegistry.getSession(request.getAppName(), keyValue[1]);
                     break;
                 }
@@ -99,6 +100,9 @@ public class RequestParser {
         if (webServerSession == null) {
             webServerSession = new WebServerSession(UUID.randomUUID().toString());
             sessionRegistry.register(request.getAppName(), webServerSession);
+            log.debug("Session was not found. Create new session {}", webServerSession);
+        } else {
+            log.debug("Session {} was found in registry", webServerSession);
         }
         request.setWebServerSession(webServerSession);
     }

@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class WebServerSession extends HttpSessionAdapter {
+    public static final String SESSIONID = "SESSIONID";
+
     private Map<String, Object> attributes = new HashMap<>();
     @Getter
     private String sessionId;

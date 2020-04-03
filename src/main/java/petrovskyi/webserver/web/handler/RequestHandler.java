@@ -55,7 +55,7 @@ public class RequestHandler implements Runnable {
             }
 
             WebServerOutputStream webServerOutputStream = new WebServerOutputStream(socket.getOutputStream(),
-                    webServerServletRequest.getSession().getId());
+                    webServerServletRequest.getSession());
             try (WebServerServletResponse webServerServletResponse = new WebServerServletResponse(webServerOutputStream);) {
                 List<Filter> filters = getFilters(application, requestURI);
 
@@ -64,7 +64,9 @@ public class RequestHandler implements Runnable {
                     });
                 }
 
-                httpServlet.service(webServerServletRequest, webServerServletResponse);
+                if (!webServerOutputStream.onlyHeaders) {
+                    httpServlet.service(webServerServletRequest, webServerServletResponse);
+                }
             }
 
         } catch (Exception e) {
