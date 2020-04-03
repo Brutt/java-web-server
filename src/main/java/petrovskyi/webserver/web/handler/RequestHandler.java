@@ -3,6 +3,7 @@ package petrovskyi.webserver.web.handler;
 import lombok.extern.slf4j.Slf4j;
 import petrovskyi.webserver.application.entity.ApplicationInfo;
 import petrovskyi.webserver.application.registry.ApplicationRegistry;
+import petrovskyi.webserver.session.SessionRegistry;
 import petrovskyi.webserver.web.http.request.WebServerServletRequest;
 import petrovskyi.webserver.web.http.response.WebServerServletResponse;
 import petrovskyi.webserver.web.parser.RequestParser;
@@ -20,10 +21,12 @@ import java.util.List;
 public class RequestHandler implements Runnable {
     private Socket socket;
     private ApplicationRegistry applicationRegistry;
+    private SessionRegistry sessionRegistry;
 
-    public RequestHandler(Socket socket, ApplicationRegistry applicationRegistry) {
+    public RequestHandler(Socket socket, ApplicationRegistry applicationRegistry, SessionRegistry sessionRegistry) {
         this.socket = socket;
         this.applicationRegistry = applicationRegistry;
+        this.sessionRegistry = sessionRegistry;
     }
 
     @Override
@@ -31,7 +34,7 @@ public class RequestHandler implements Runnable {
         log.info("Starting to handle new request");
         try (BufferedReader socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));) {
 
-            RequestParser requestParser = new RequestParser();
+            RequestParser requestParser = new RequestParser(sessionRegistry);
             WebServerServletRequest webServerServletRequest = requestParser.parseRequest(socketReader);
 
             ApplicationInfo application = applicationRegistry.getApplication(webServerServletRequest.getAppName());
@@ -51,8 +54,8 @@ public class RequestHandler implements Runnable {
                 return;
             }
 
-            WebServerOutputStream webServerOutputStream = new WebServerOutputStream(socket.getOutputStream());
-            webServerOutputStream.startGoodOutputStream();
+            WebServerOutputStream webServerOutputStream = new WebServerOutputStream(socket.getOutputStream(),
+                    webServerServletRequest.getSession().getId());
             try (WebServerServletResponse webServerServletResponse = new WebServerServletResponse(webServerOutputStream);) {
                 List<Filter> filters = getFilters(application, requestURI);
 
@@ -84,10 +87,10 @@ public class RequestHandler implements Runnable {
     }
 
     private List<Filter> getFilters(ApplicationInfo application, String requestURI) {
-        List<Filter> filters = application.getUrlToFilters().get(requestURI);
+        List<Filter> filters = new ArrayList<>();
 
-        if (filters == null) {
-            filters = new ArrayList<>();
+        if (application.getUrlToFilters().get(requestURI) != null) {
+            filters.addAll(application.getUrlToFilters().get(requestURI));
         }
 
         for (String key : application.getUrlToFilters().keySet()) {

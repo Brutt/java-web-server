@@ -13,11 +13,18 @@ public class WebServerServletRequest extends HttpServletRequestAdapter {
     private String uri;
     private Map<String, String> headers;
     private String appName;
+    private Map<String, String> parameters;
     private WebServerSession webServerSession;
+
 
     @Override
     public String getHeader(String s) {
         return headers.get(s);
+    }
+
+    @Override
+    public String getContextPath() {
+        return "/" + appName;
     }
 
     @Override
@@ -38,6 +45,11 @@ public class WebServerServletRequest extends HttpServletRequestAdapter {
     @Override
     public HttpSession getSession() {
         return webServerSession;
+    }
+
+    @Override
+    public String getParameter(String s) {
+        return parameters.get(s);
     }
 
     public String getAppName() {

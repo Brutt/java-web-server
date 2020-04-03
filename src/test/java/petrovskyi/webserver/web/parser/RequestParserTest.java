@@ -1,6 +1,7 @@
 package petrovskyi.webserver.web.parser;
 
 import org.junit.jupiter.api.Test;
+import petrovskyi.webserver.session.SessionRegistry;
 import petrovskyi.webserver.web.http.HttpMethod;
 import petrovskyi.webserver.web.http.request.WebServerServletRequest;
 
@@ -13,7 +14,7 @@ class RequestParserTest {
         WebServerServletRequest request = new WebServerServletRequest();
         String data = "GET /test/hello HTTP/1.1";
 
-        RequestParser requestParser = new RequestParser();
+        RequestParser requestParser = new RequestParser(new SessionRegistry());
         requestParser.injectData(request, data);
 
         assertEquals(HttpMethod.GET.name(), request.getMethod());

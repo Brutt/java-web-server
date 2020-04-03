@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
-public class WebServerServletResponse extends HttpServletResponseAdapter implements AutoCloseable{
+public class WebServerServletResponse extends HttpServletResponseAdapter implements AutoCloseable {
     private String characterEncoding = "UTF-8";
     private WebServerOutputStream webServerOutputStream;
     private PrintWriter printWriter;
@@ -15,6 +15,11 @@ public class WebServerServletResponse extends HttpServletResponseAdapter impleme
 
     public WebServerServletResponse(WebServerOutputStream webServerOutputStream) {
         this.webServerOutputStream = webServerOutputStream;
+    }
+
+    @Override
+    public void sendRedirect(String s) throws IOException {
+        webServerOutputStream.sendRedirect(s);
     }
 
     @Override
@@ -44,8 +49,12 @@ public class WebServerServletResponse extends HttpServletResponseAdapter impleme
         webServerOutputStream.setContentType(s);
     }
 
-    public void close() {
-        printWriter.close();
+    public void close() throws IOException {
+        if (printWriter != null) {
+            printWriter.close();
+        } else {
+            webServerOutputStream.close();
+        }
     }
 
 }

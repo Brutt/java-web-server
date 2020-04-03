@@ -21,6 +21,7 @@ public class HelloServlet extends HttpServlet {
                 "<head>\n" +
                 "    <meta charset=\"UTF-8\">\n" +
                 "    <link rel=\"stylesheet\" href=\"assets/css/style.css\">" +
+                "    <link rel=\"icon\" href=\"assets/favicon.ico\">" +
                 "    <title>Title</title>\n" +
                 "</head>\n" +
                 "<body>\n" +

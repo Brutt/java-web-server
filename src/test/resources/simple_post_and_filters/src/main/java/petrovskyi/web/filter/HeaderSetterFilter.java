@@ -46,6 +46,8 @@ public class HeaderSetterFilter implements Filter {
             response.setContentType("application/javascript");
         } else if (request.getRequestURI().contains(".svg")) {
             response.setContentType("image/svg+xml");
+        } else if (request.getRequestURI().contains(".ico")) {
+            response.setContentType("image/x-icon");
         }
     }
 

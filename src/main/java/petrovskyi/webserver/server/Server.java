@@ -3,6 +3,7 @@ package petrovskyi.webserver.server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import petrovskyi.webserver.application.registry.ApplicationRegistry;
+import petrovskyi.webserver.session.SessionRegistry;
 import petrovskyi.webserver.util.PropertyHolder;
 import petrovskyi.webserver.webapp.WebAppDirector;
 import petrovskyi.webserver.web.handler.RequestHandler;
@@ -20,6 +21,7 @@ public class Server {
     private int port;
     private ExecutorService service;
     private ApplicationRegistry applicationRegistry = new ApplicationRegistry();
+    private SessionRegistry sessionRegistry = new SessionRegistry();
     private volatile boolean isRunning = true;
     private ServerSocket serverSocket;
 
@@ -57,7 +59,7 @@ public class Server {
                     serverSocket.close();
                     break;
                 }
-                service.execute(new RequestHandler(accept, applicationRegistry));
+                service.execute(new RequestHandler(accept, applicationRegistry, sessionRegistry));
             }
 
         } catch (IOException e) {

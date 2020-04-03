@@ -1,6 +1,7 @@
 package petrovskyi.webserver;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.shared.invoker.*;
 import org.junit.jupiter.api.Test;
 
@@ -61,9 +62,10 @@ public class TestWarHandler {
     }
 
     @Test
-    public void startServerWithTestWar() throws MavenInvocationException {
+    public void startServerWithTestWar() throws MavenInvocationException, IOException {
         createTestWar();
         copyTestWarToWebapps();
+        FileUtils.deleteDirectory(new File("webapps", appName));
 
         log.info("Start the main method to start the server");
         Starter.main(new String[0]);

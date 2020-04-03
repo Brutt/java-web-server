@@ -19,9 +19,12 @@ public class WebServerOutputStream extends ServletOutputStream {
     private final OutputStream outputStream;
     private String contentType;
     private boolean isHeaderAdded = false;
+    private boolean isStatusCodeSet = false;
+    private String sessionId;
 
-    public WebServerOutputStream(OutputStream outputStream) {
+    public WebServerOutputStream(OutputStream outputStream, String sessionId) {
         this.outputStream = outputStream;
+        this.sessionId = sessionId;
     }
 
     @Override
@@ -36,8 +39,14 @@ public class WebServerOutputStream extends ServletOutputStream {
 
     @Override
     public void write(int i) throws IOException {
+        if (!isStatusCodeSet) {
+            startGoodOutputStream();
+            addHeader("Set-Cookie: SESSIONID=" + sessionId + "; Path=/");
+        }
+
         if (!isHeaderAdded) {
             addHeader(contentType);
+
             endHeaders();
         }
         isHeaderAdded = true;
@@ -48,6 +57,7 @@ public class WebServerOutputStream extends ServletOutputStream {
     public void startGoodOutputStream() {
         try {
             addHeader(GOOD_HEADER);
+            isStatusCodeSet = true;
         } catch (IOException e) {
             log.error("Error while starting good output stream", e);
         }
@@ -77,6 +87,17 @@ public class WebServerOutputStream extends ServletOutputStream {
 
     public void flush() throws IOException {
         outputStream.flush();
+    }
+
+    public void sendRedirect(String s) {
+        try {
+            addHeader("HTTP/1.1 302 Found");
+            addHeader("Location: " + s);
+            addHeader("Set-Cookie: SESSIONID=" + sessionId + "; Path=/");
+            isStatusCodeSet = true;
+        } catch (IOException e) {
+            log.error("Error while redirecting", e);
+        }
     }
 
 }
