@@ -5,4 +5,5 @@ target
 artifact/*.jar
 logs
 webapps
+!bin/webapps
 test1.java
