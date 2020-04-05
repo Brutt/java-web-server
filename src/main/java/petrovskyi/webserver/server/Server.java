@@ -13,20 +13,19 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 public class Server {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     private PropertyHolder propertyHolder;
-    private int port;
-    private ExecutorService service;
+    private ExecutorService requestHandlerThreadPool;
     private ApplicationRegistry applicationRegistry = new ApplicationRegistry();
     private SessionRegistry sessionRegistry = new SessionRegistry();
     private volatile boolean isRunning = true;
     private ServerSocket serverSocket;
 
-    public Server(int port, PropertyHolder propertyHolder) {
-        this.port = port;
+    public Server(PropertyHolder propertyHolder) {
         this.propertyHolder = propertyHolder;
     }
 
@@ -34,33 +33,26 @@ public class Server {
         LOG.info("Server starts");
 
         int threadCount = propertyHolder.getInt("server.thread_count");
-        service = Executors.newFixedThreadPool(threadCount, runnable -> {
-            Thread thread = new Thread(runnable);
-            thread.setName("RequestHandler");
-            thread.setDaemon(true);
-
-            return thread;
-        });
+        requestHandlerThreadPool = Executors.newFixedThreadPool(threadCount, createThreadFactory());
 
         WebAppDirector webAppDirector = new WebAppDirector(applicationRegistry);
 
         webAppDirector.manageAtStartup();
 
-        service.execute(() -> {
-            Thread currentThread = Thread.currentThread();
-            currentThread.setName("WebAppDirector");
-            webAppDirector.manage();
-        });
+        Thread webAppDirectorThread = new Thread(webAppDirector::manage);
+        webAppDirectorThread.setDaemon(true);
+        webAppDirectorThread.setName("WebAppDirector");
+        webAppDirectorThread.start();
 
         try {
-            serverSocket = new ServerSocket(port);
+            serverSocket = new ServerSocket(propertyHolder.getInt("server.port"));
             while (true) {
                 Socket accept = serverSocket.accept();
                 if (!isRunning) {
                     serverSocket.close();
                     break;
                 }
-                service.execute(new RequestHandler(accept, applicationRegistry, sessionRegistry));
+                requestHandlerThreadPool.execute(new RequestHandler(accept, applicationRegistry, sessionRegistry));
             }
 
         } catch (IOException e) {
@@ -77,15 +69,15 @@ public class Server {
 
         applicationRegistry.cleanAll();
 
-        service.shutdown();
+        requestHandlerThreadPool.shutdown();
         try {
-            if (!service.awaitTermination(2000, TimeUnit.MILLISECONDS)) {
-                service.shutdownNow();
+            if (!requestHandlerThreadPool.awaitTermination(2000, TimeUnit.MILLISECONDS)) {
+                requestHandlerThreadPool.shutdownNow();
                 LOG.info("Trying to stop the server with shutdownNow");
             }
         } catch (InterruptedException e) {
             LOG.error("Error while stopping the server", e);
-            service.shutdownNow();
+            requestHandlerThreadPool.shutdownNow();
         }
 
         try {
@@ -96,6 +88,16 @@ public class Server {
             throw new RuntimeException("Error trying to create new Socket", e);
         }
 
-        LOG.info("Server is " + (service.isShutdown() ? "shutdown" : "still running"));
+        LOG.info("Server is " + (requestHandlerThreadPool.isShutdown() ? "shutdown" : "still running"));
+    }
+
+    private ThreadFactory createThreadFactory(){
+        return runnable -> {
+            Thread thread = new Thread(runnable);
+            thread.setName("RequestHandler");
+            thread.setDaemon(true);
+
+            return thread;
+        };
     }
 }

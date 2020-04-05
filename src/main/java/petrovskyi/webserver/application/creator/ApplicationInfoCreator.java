@@ -3,6 +3,7 @@ package petrovskyi.webserver.application.creator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import petrovskyi.webserver.application.entity.ApplicationInfo;
+import petrovskyi.webserver.classloader.ChildFirstClassLoader;
 import petrovskyi.webserver.web.servlet.config.WebServletConfig;
 import petrovskyi.webserver.web.servlet.context.WebServletContext;
 import petrovskyi.webserver.webapp.entity.WebXmlDefinition;
@@ -12,7 +13,6 @@ import javax.servlet.http.HttpServlet;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -31,19 +31,30 @@ public class ApplicationInfoCreator {
     public ApplicationInfo create(String appDir, WebXmlDefinition webXmlDefinition) {
         String appName = appDir.substring(appDir.lastIndexOf("/") + 1);
         LOG.info("Start to create new application with name {}", appName);
-        ClassLoader classLoader = getClassLoader(appDir);
 
-        Map<String, HttpServlet> urlToServlet = createUrlToServletMap(webXmlDefinition.getUrlToServletClassName(), classLoader);
-        Map<String, List<Filter>> urlToFilters = createUrlToFiltersMap(webXmlDefinition.getUrlToFiltersClassName(), classLoader);
+        ChildFirstClassLoader classLoader = getClassLoader(appDir);
 
-        ApplicationInfo applicationInfo = new ApplicationInfo(appName, urlToServlet, urlToFilters);
+        Map<String, HttpServlet> urlToServlet;
+        Map<String, List<Filter>> urlToFilters;
+
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(new ChildFirstClassLoader(classLoader.getURLs(), classLoader));
+
+        try {
+            urlToServlet = createUrlToServletMap(webXmlDefinition.getUrlToServletClassName(), classLoader);
+            urlToFilters = createUrlToFiltersMap(webXmlDefinition.getUrlToFiltersClassName(), classLoader);
+        } finally {
+            Thread.currentThread().setContextClassLoader(contextClassLoader);
+        }
+
+        ApplicationInfo applicationInfo = new ApplicationInfo(appName, urlToServlet, urlToFilters, classLoader.getURLs());
 
         LOG.info("Application {} was successfully created", applicationInfo.getName());
 
         return applicationInfo;
     }
 
-    private Map<String, HttpServlet> createUrlToServletMap(Map<String, List<String>> urlToClassName, ClassLoader classLoader) {
+    private Map<String, HttpServlet> createUrlToServletMap(Map<String, List<String>> urlToClassName, ChildFirstClassLoader classLoader) {
         LOG.debug("Start to transform urlToClassName map into urlToServlet");
         Map<String, HttpServlet> servletMap = new HashMap<>();
 
@@ -68,7 +79,7 @@ public class ApplicationInfoCreator {
         return servletMap;
     }
 
-    private Map<String, List<Filter>> createUrlToFiltersMap(Map<String, List<String>> urlToClassName, ClassLoader classLoader) {
+    private Map<String, List<Filter>> createUrlToFiltersMap(Map<String, List<String>> urlToClassName, ChildFirstClassLoader classLoader) {
         LOG.debug("Start to transform urlToClassName map into urlToFilters");
         Map<String, List<Filter>> filtersMap = new HashMap<>();
 
@@ -96,7 +107,7 @@ public class ApplicationInfoCreator {
         return filtersMap;
     }
 
-    private ClassLoader getClassLoader(String appDir) {
+    private ChildFirstClassLoader getClassLoader(String appDir) {
         LOG.debug("Start to get class loader in folder {}", appDir);
         File classDir = Paths.get(appDir, WEB_INF, CLASSES).toFile();
         File libDir = Paths.get(appDir, WEB_INF, LIB).toFile();
@@ -130,6 +141,6 @@ public class ApplicationInfoCreator {
             throw new RuntimeException("Error while trying to transform file " + classDir + " into URL", e);
         }
 
-        return new URLClassLoader(urls);
+        return new ChildFirstClassLoader(urls);
     }
 }

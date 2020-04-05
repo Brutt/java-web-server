@@ -61,7 +61,8 @@ public class TestWarHandler {
         log.info("Test war file was copied to webapps folder");
     }
 
-    @Test
+    // uncomment to build test app
+    //@Test
     public void startServerWithTestWar() throws MavenInvocationException, IOException {
         createTestWar();
         copyTestWarToWebapps();

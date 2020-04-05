@@ -1,6 +1,7 @@
 package petrovskyi.web.servlet;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonParser;
 import petrovskyi.entity.Car;
 
 import javax.servlet.http.HttpServlet;
@@ -16,6 +17,8 @@ public class JsonCarServlet extends HttpServlet {
 
         Car car = new Car("yellow", "renault");
         String carJsonString = new Gson().toJson(car);
+
+        System.out.println(JsonParser.parseString(carJsonString));
 
         PrintWriter out = resp.getWriter();
         resp.setContentType("application/json");

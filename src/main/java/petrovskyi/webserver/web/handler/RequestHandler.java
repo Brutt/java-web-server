@@ -31,7 +31,7 @@ public class RequestHandler implements Runnable {
 
     @Override
     public void run() {
-        log.info("Starting to handle new request");
+        log.debug("Starting to handle new request");
         try (BufferedReader socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));) {
 
             RequestParser requestParser = new RequestParser(sessionRegistry);
@@ -39,23 +39,24 @@ public class RequestHandler implements Runnable {
 
             ApplicationInfo application = applicationRegistry.getApplication(webServerServletRequest.getAppName());
             if (application == null) {
-                log.info("Cannot find an application with the name {}", webServerServletRequest.getAppName());
+                log.warn("Cannot find an application with the name {}", webServerServletRequest.getAppName());
                 return;
             }
 
-            log.info("Request to {} application", application);
+            log.info("Request to {} application", application.getName());
 
             String requestURI = webServerServletRequest.getRequestURI();
             log.info("Request to {} endpoint", requestURI);
 
             HttpServlet httpServlet = getHttpServlet(application, requestURI);
             if (httpServlet == null) {
-                log.info("Cannot find a servlet by URI {}", requestURI);
+                log.warn("Cannot find a servlet by URI {}", requestURI);
                 return;
             }
 
             WebServerOutputStream webServerOutputStream = new WebServerOutputStream(socket.getOutputStream(),
                     webServerServletRequest.getSession());
+            webServerOutputStream.setAppName(application.getName());
             try (WebServerServletResponse webServerServletResponse = new WebServerServletResponse(webServerOutputStream);) {
                 List<Filter> filters = getFilters(application, requestURI);
 
@@ -76,6 +77,7 @@ public class RequestHandler implements Runnable {
     }
 
     private HttpServlet getHttpServlet(ApplicationInfo application, String requestURI) {
+        log.debug("Getting servlet from application {} for uri {}", application, requestURI);
         HttpServlet httpServlet = application.getUrlToServlet().get(requestURI);
         if (httpServlet == null) {
             for (String key : application.getUrlToServlet().keySet()) {
@@ -88,7 +90,8 @@ public class RequestHandler implements Runnable {
         return httpServlet;
     }
 
-    private List<Filter> getFilters(ApplicationInfo application, String requestURI) {
+    List<Filter> getFilters(ApplicationInfo application, String requestURI) {
+        log.debug("Getting filters from application {} for uri {}", application, requestURI);
         List<Filter> filters = new ArrayList<>();
 
         if (application.getUrlToFilters().get(requestURI) != null) {

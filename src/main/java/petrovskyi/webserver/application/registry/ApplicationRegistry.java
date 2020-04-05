@@ -29,7 +29,7 @@ public class ApplicationRegistry {
             LOG.info("Application {} was removed", removed.getName());
             destroyServletsAndFilters(removed);
         } else {
-            LOG.info("Cannot find an application {} to remove", appName);
+            LOG.warn("Cannot find an application {} to remove", appName);
         }
 
         return removed;

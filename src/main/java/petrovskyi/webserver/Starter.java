@@ -17,7 +17,7 @@ class Starter {
 
         initializeProperties(args);
 
-        Server server = new Server(propertyHolder.getInt("server.port"), propertyHolder);
+        Server server = new Server(propertyHolder);
 
         Signal.handle(new Signal("TERM"), signal -> {
             log.info("Terminate signal {} ({}) interrupted program execution", signal.getName(), signal.getNumber());

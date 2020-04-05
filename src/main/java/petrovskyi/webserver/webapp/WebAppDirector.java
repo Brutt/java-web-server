@@ -66,8 +66,8 @@ public class WebAppDirector {
         try {
             webXmlDefinition = webXmlHandler.handle(unzipDir);
         } catch (FileNotFoundException e) {
-            LOG.error("Cannot find web.xml in {}", unzipDir);
-            return;
+            LOG.error("Cannot find web.xml in {}", unzipDir, e);
+            throw new RuntimeException("Cannot find web.xml in " + unzipDir, e);
         }
         ApplicationInfo applicationInfo = applicationInfoCreator.create(unzipDir.getPath(), webXmlDefinition);
 

@@ -6,7 +6,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+
 public class LoginFilter implements Filter {
+    private JsonElement test = JsonParser.parseString("{\"color\":\"yellow\",\"type\":\"renault\"}");
 
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;

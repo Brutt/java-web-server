@@ -1,6 +1,7 @@
 package petrovskyi.webserver.web.parser;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import petrovskyi.webserver.session.SessionRegistry;
 import petrovskyi.webserver.web.http.HttpMethod;
 import petrovskyi.webserver.web.http.request.WebServerServletRequest;
@@ -25,9 +26,11 @@ public class RequestParser {
         WebServerServletRequest request = new WebServerServletRequest();
         String message = socketReader.readLine();
         injectData(request, message);
-        injectHeaders(request, socketReader);
-        injectBody(request, socketReader);
-        injectSession(request);
+        if (request.getAppName() != null) {
+            injectHeaders(request, socketReader);
+            injectBody(request, socketReader);
+            injectSession(request);
+        }
 
         return request;
     }
@@ -38,7 +41,7 @@ public class RequestParser {
         String[] uris = firstLine[1].split("/");
 
         request.setHttpMethod(HttpMethod.valueOf(firstLine[0]));
-        if (uris.length > 1) {
+        if (uris.length > 1 && !"favicon.ico".equals(uris[1])) {
             request.setAppName(uris[1]);
             request.setUri(firstLine[1].substring(uris[1].length() + 1));
         }
@@ -74,7 +77,9 @@ public class RequestParser {
         String[] splitParams = params.split("&");
         for (String splitParam : splitParams) {
             String[] keyValue = splitParam.split("=");
-            parameterMap.put(keyValue[0], keyValue[1]);
+            if (keyValue.length == 2) {
+                parameterMap.put(keyValue[0], keyValue[1]);
+            }
         }
 
         request.setParameters(parameterMap);
@@ -90,7 +95,11 @@ public class RequestParser {
             String[] cookieSplit = cookies.split("; ");
             for (String cookie : cookieSplit) {
                 String[] keyValue = cookie.split("=");
-                if (WebServerSession.SESSIONID.equals(keyValue[0])) {
+
+                String suffix = DigestUtils.sha1Hex(request.getAppName());
+                String sessionCookieName = WebServerSession.SESSIONID + "." + suffix;
+
+                if (sessionCookieName.equals(keyValue[0])) {
                     webServerSession = sessionRegistry.getSession(request.getAppName(), keyValue[1]);
                     break;
                 }
