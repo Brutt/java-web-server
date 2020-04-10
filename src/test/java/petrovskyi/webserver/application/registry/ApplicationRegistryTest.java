@@ -36,12 +36,12 @@ class ApplicationRegistryTest {
         HashMap<String, List<Filter>> urlToFilters = new HashMap<>();
         urlToFilters.put("/", filters);
 
-        ApplicationInfo applicationInfo1 = new ApplicationInfo("test1", urlToServlet, urlToFilters, null);
+        ApplicationInfo applicationInfo1 = new ApplicationInfo("test1", urlToServlet, urlToFilters);
         applicationRegistry.register(applicationInfo1);
 
         HashMap<String, HttpServlet> urlToServlet2 = new HashMap<>();
         urlToServlet2.put("servlet2", httpServlet2);
-        ApplicationInfo applicationInfo2 = new ApplicationInfo("test2", urlToServlet2, urlToFilters, null);
+        ApplicationInfo applicationInfo2 = new ApplicationInfo("test2", urlToServlet2, urlToFilters);
         applicationRegistry.register(applicationInfo2);
     }
 

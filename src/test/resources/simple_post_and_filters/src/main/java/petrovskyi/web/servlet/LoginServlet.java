@@ -1,8 +1,10 @@
 package petrovskyi.web.servlet;
 
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
+import org.slf4j.spi.DefaultLoggingEventBuilder;
+import org.slf4j.spi.LoggingEventBuilder;
 import petrovskyi.security.SecurityService;
 
 import javax.servlet.http.HttpServlet;
@@ -15,10 +17,12 @@ import java.io.PrintWriter;
 public class LoginServlet extends HttpServlet {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     private SecurityService securityService = new SecurityService();
-    private Gson gson = new Gson();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        LoggingEventBuilder loggingEventBuilder = new DefaultLoggingEventBuilder(LOG, Level.ERROR);
+        loggingEventBuilder.log(" =========== Hello, World! ===========");
+
         PrintWriter writer = response.getWriter();
         writer.write("<!DOCTYPE html>\n" +
                 "<html lang=\"en\">\n" +

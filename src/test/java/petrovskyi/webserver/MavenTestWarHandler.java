@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 @Slf4j
-public class TestWarHandler {
+public class MavenTestWarHandler {
     //private String appName = "simple";
     private String appName = "simple_post_and_filters";
 
@@ -62,7 +62,7 @@ public class TestWarHandler {
     }
 
     // uncomment to build test app
-    //@Test
+    @Test
     public void startServerWithTestWar() throws MavenInvocationException, IOException {
         createTestWar();
         copyTestWarToWebapps();

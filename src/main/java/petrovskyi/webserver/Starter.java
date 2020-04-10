@@ -48,7 +48,7 @@ class Starter {
             }
         } else {
             log.debug("Reading properties from default config file");
-            propertyHolder.readPropertyFileFromResources("application_properties.yml");
+            propertyHolder.readPropertyFileFromResources("web_server_properties.yml");
         }
     }
 }

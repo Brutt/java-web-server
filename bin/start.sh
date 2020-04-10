@@ -1,1 +1,1 @@
-java -jar java-web-server.jar -conf application_properties.yml & echo "var="$! > process.id
+java -jar java-web-server.jar -conf web_server_properties.yml & echo "var="$! > process.id

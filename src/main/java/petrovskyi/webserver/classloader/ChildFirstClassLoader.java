@@ -14,10 +14,6 @@ public class ChildFirstClassLoader extends URLClassLoader {
         super(urls, parent);
     }
 
-    public ChildFirstClassLoader(URL[] urls) {
-        super(urls);
-    }
-
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         Class<?> loadedClass = findLoadedClass(name);
@@ -53,7 +49,7 @@ public class ChildFirstClassLoader extends URLClassLoader {
             }
         }
 
-        return new Enumeration<URL>() {
+        return new Enumeration<>() {
             Iterator<URL> it = allRes.iterator();
 
             @Override

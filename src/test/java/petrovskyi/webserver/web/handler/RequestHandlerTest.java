@@ -56,7 +56,7 @@ class RequestHandlerTest {
         urlToFilters.put("/test1", filters2);
         urlToFilters.put("/test1/test2", filters3);
 
-        applicationInfo = new ApplicationInfo("test1", urlToServlet, urlToFilters, null);
+        applicationInfo = new ApplicationInfo("test1", urlToServlet, urlToFilters);
     }
 
     @Test

@@ -32,13 +32,16 @@ public class ApplicationInfoCreator {
         String appName = appDir.substring(appDir.lastIndexOf("/") + 1);
         LOG.info("Start to create new application with name {}", appName);
 
-        ChildFirstClassLoader classLoader = getClassLoader(appDir);
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+
+        URL[] urls = getUrls(appDir);
+        ChildFirstClassLoader classLoader = new ChildFirstClassLoader(urls, contextClassLoader);
 
         Map<String, HttpServlet> urlToServlet;
         Map<String, List<Filter>> urlToFilters;
 
-        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(new ChildFirstClassLoader(classLoader.getURLs(), classLoader));
+
+        Thread.currentThread().setContextClassLoader(classLoader);
 
         try {
             urlToServlet = createUrlToServletMap(webXmlDefinition.getUrlToServletClassName(), classLoader);
@@ -47,7 +50,7 @@ public class ApplicationInfoCreator {
             Thread.currentThread().setContextClassLoader(contextClassLoader);
         }
 
-        ApplicationInfo applicationInfo = new ApplicationInfo(appName, urlToServlet, urlToFilters, classLoader.getURLs());
+        ApplicationInfo applicationInfo = new ApplicationInfo(appName, urlToServlet, urlToFilters);
 
         LOG.info("Application {} was successfully created", applicationInfo.getName());
 
@@ -107,7 +110,7 @@ public class ApplicationInfoCreator {
         return filtersMap;
     }
 
-    private ChildFirstClassLoader getClassLoader(String appDir) {
+    private URL[] getUrls(String appDir) {
         LOG.debug("Start to get class loader in folder {}", appDir);
         File classDir = Paths.get(appDir, WEB_INF, CLASSES).toFile();
         File libDir = Paths.get(appDir, WEB_INF, LIB).toFile();
@@ -141,6 +144,6 @@ public class ApplicationInfoCreator {
             throw new RuntimeException("Error while trying to transform file " + classDir + " into URL", e);
         }
 
-        return new ChildFirstClassLoader(urls);
+        return urls;
     }
 }

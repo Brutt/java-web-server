@@ -15,5 +15,4 @@ public class ApplicationInfo {
     private String name;
     private Map<String, HttpServlet> urlToServlet;
     private Map<String, List<Filter>> urlToFilters;
-    private URL[] urls;
 }
