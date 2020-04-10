@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Product</title>
+    <meta th:replace="fragment/head.html :: meta">
+    <link th:replace="fragment/head.html :: link">
+</head>
+<body>
+<header class="header">
+    <div th:replace="fragment/navigation.html :: navigation"></div>
+    <div class="header__block-parameters">
+        <div class="header__shop-name">
+            <h1>Book information</h1>
+        </div>
+    </div>
+</header>
+
+<main>
+    <div class="container content">
+        <div class="product">
+            <div class="column-xs-12 column-md-7">
+                <div>
+                    <img th:src="${product.pathToImage}">
+                </div>
+            </div>
+            <div class="column-xs-12 column-md-5 product__info">
+                <h1 th:utext="${product.productName}"></h1>
+                <div th:utext="'Price ' + ${#numbers.formatDecimal(product.price, 0, 2)} + ' $'" class="product__price"></div>
+                <div class="product__rating">
+                    <div class="product__rating-amount" th:utext="${product.rating}"></div>
+                    <i class="fas fa-star card__star star"></i>
+                </div>
+                <div class="product__description">
+                    <p th:utext="${product.description}"></p>
+                </div>
+                <div th:if="${userRole == 'ADMIN'}" class="product__creation-date">
+                    <p th:utext="${product.creationDate}"></p>
+                </div>
+                <div class="product__buttons">
+                    <form th:action="@{cart/{id}(id=${product.id})}" method="post" class="button__delete-position">
+                        <button class="btn btn-outline-dark my-2 my-sm-0 button__delete" type="submit">Add To Cart</button>
+                    </form>
+                    <a th:if="${userRole == 'ADMIN'}" th:href="@{'edit/' + ${product.id}}"
+                       class="btn btn-submit btn-outline-dark product__add-to-cart button">Edit</a>
+                </div>
+                <form th:if="${userRole == 'ADMIN'}" th:action="@{delete/{id}(id=${product.id})}" method="post" class="button__delete-position">
+                    <button class="btn btn-outline-dark my-2 my-sm-0 button__delete" type="submit">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="fragment/footer.html :: footer"></div>
+
+</body>
+<div th:replace="fragment/script.html :: script"></div>
+</html>

@@ -35,7 +35,7 @@ public class ApplicationInfoCreator {
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
 
         URL[] urls = getUrls(appDir);
-        ChildFirstClassLoader classLoader = new ChildFirstClassLoader(urls, contextClassLoader);
+        ChildFirstClassLoader classLoader = new ChildFirstClassLoader(urls);
 
         Map<String, HttpServlet> urlToServlet;
         Map<String, List<Filter>> urlToFilters;

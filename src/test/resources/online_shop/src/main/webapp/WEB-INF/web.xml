@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app>
+    <!--  Servlets  -->
+
+    <servlet>
+        <servlet-name>AllProductsServlet</servlet-name>
+        <servlet-class>com.bahinskyi.onlineshop.web.servlet.AllProductsServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>AddProductServlet</servlet-name>
+        <servlet-class>com.bahinskyi.onlineshop.web.servlet.AddProductServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>EditProductServlet</servlet-name>
+        <servlet-class>com.bahinskyi.onlineshop.web.servlet.EditProductServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>ProductInfoServlet</servlet-name>
+        <servlet-class>com.bahinskyi.onlineshop.web.servlet.ProductInfoServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>GetStaticResourcesServlet</servlet-name>
+        <servlet-class>com.bahinskyi.onlineshop.web.servlet.GetStaticResourcesServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>LoginServlet</servlet-name>
+        <servlet-class>com.bahinskyi.onlineshop.web.servlet.LoginServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>LogoutServlet</servlet-name>
+        <servlet-class>com.bahinskyi.onlineshop.web.servlet.LogoutServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>DeleteProductServlet</servlet-name>
+        <servlet-class>com.bahinskyi.onlineshop.web.servlet.DeleteProductServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>CartServlet</servlet-name>
+        <servlet-class>com.bahinskyi.onlineshop.web.servlet.CartServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>AddCartServlet</servlet-name>
+        <servlet-class>com.bahinskyi.onlineshop.web.servlet.AddCartServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>DeleteCartServlet</servlet-name>
+        <servlet-class>com.bahinskyi.onlineshop.web.servlet.DeleteCartServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>AllProductsServlet</servlet-name>
+        <url-pattern>/products</url-pattern>
+        <url-pattern></url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>AddProductServlet</servlet-name>
+        <url-pattern>/product/add</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>EditProductServlet</servlet-name>
+        <url-pattern>/product/edit/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>ProductInfoServlet</servlet-name>
+        <url-pattern>/product/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>GetStaticResourcesServlet</servlet-name>
+        <url-pattern>/static/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>LoginServlet</servlet-name>
+        <url-pattern>/login</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>LogoutServlet</servlet-name>
+        <url-pattern>/logout</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>DeleteProductServlet</servlet-name>
+        <url-pattern>/product/delete/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>CartServlet</servlet-name>
+        <url-pattern>/cart</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>AddCartServlet</servlet-name>
+        <url-pattern>/product/cart/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>DeleteCartServlet</servlet-name>
+        <url-pattern>/cart/delete/*</url-pattern>
+    </servlet-mapping>
+
+    <!--  Filters  -->
+
+    <filter>
+        <filter-name>RoleFilter</filter-name>
+        <filter-class>com.bahinskyi.onlineshop.web.filter.RoleFilter</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>UserSecurityFilter</filter-name>
+        <filter-class>com.bahinskyi.onlineshop.web.filter.UserSecurityFilter</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>AdminSecurityFilter</filter-name>
+        <filter-class>com.bahinskyi.onlineshop.web.filter.AdminSecurityFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>RoleFilter</filter-name>
+        <url-pattern>/</url-pattern>
+        <url-pattern>/products</url-pattern>
+        <url-pattern>/product/*</url-pattern>
+        <url-pattern>/logout</url-pattern>
+        <url-pattern>/product/add</url-pattern>
+        <url-pattern>/product/edit/*</url-pattern>
+        <url-pattern>/product/delete/*</url-pattern>
+        <url-pattern>/cart</url-pattern>
+        <url-pattern>/cart/delete/*</url-pattern>
+        <url-pattern>/product/cart/*</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>UserSecurityFilter</filter-name>
+        <url-pattern>/product/*</url-pattern>
+        <url-pattern>/logout</url-pattern>
+        <url-pattern>/cart</url-pattern>
+        <url-pattern>/cart/delete/*</url-pattern>
+        <url-pattern>/product/cart/*</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>AdminSecurityFilter</filter-name>
+        <url-pattern>/product/add</url-pattern>
+        <url-pattern>/product/edit/*</url-pattern>
+        <url-pattern>/product/delete/*</url-pattern>
+    </filter-mapping>
+</web-app>

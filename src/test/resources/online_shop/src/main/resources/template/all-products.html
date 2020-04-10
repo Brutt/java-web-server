@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Online Products</title>
+    <meta th:replace="fragment/head.html :: meta">
+    <link th:replace="fragment/head.html :: link">
+</head>
+<body>
+<header class="header">
+    <div th:replace="fragment/navigation.html :: navigation"></div>
+    <div class="header__block-parameters">
+        <div class="header__shop-name">
+            <h1>All our books</h1>
+        </div>
+    </div>
+</header>
+
+<main class="main">
+    <div class="container">
+        <div class="row content">
+            <div class="col-sm-6 col-md-4 col-lg-3 mb-5 d-flex cards__item" th:each="product : ${products}">
+                <div class="card">
+                    <img class="card__img" th:src="${product.pathToImage}" alt="product images">
+                    <div class="card-body card__info">
+                        <div class="card-title"
+                           th:utext="${product.productName}"></div>
+                    </div>
+                    <div class="card-body card__button">
+                        <div th:unless="${userRole == 'GUEST'}">
+                            <a th:href="@{'product/' + ${product.id}}" class="btn btn-submit btn-outline-dark button"
+                               th:utext="'Buy for ' + ${#numbers.formatDecimal(product.price, 0, 2)} + ' $'"></a>
+                        </div>
+                        <div class="card__rating">
+                            <span th:utext="${product.rating}"></span>
+                            <i class="fas fa-star card__star"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="fragment/footer.html :: footer"></div>
+
+</body>
+<div th:replace="fragment/script.html :: script"></div>
+</html>

@@ -18,7 +18,8 @@ import java.util.stream.Stream;
 @Slf4j
 public class MavenTestWarHandler {
     //private String appName = "simple";
-    private String appName = "simple_post_and_filters";
+    //private String appName = "simple_post_and_filters";
+    private String appName = "online_shop";
 
     private void createTestWar() throws MavenInvocationException {
         log.info("Start to create test war");

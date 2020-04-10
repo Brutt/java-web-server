@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Login</title>
+    <meta th:replace="fragment/head.html :: meta">
+    <link th:replace="fragment/head.html :: link">
+</head>
+<body>
+<header class="header">
+    <div th:replace="fragment/navigation.html :: navigation"></div>
+    <div class="header__block-parameters">
+        <div class="header__shop-name">
+            <h1>Login</h1>
+        </div>
+    </div>
+</header>
+
+<main>
+    <div class="container content">
+        <form action="login" method="post">
+
+            <div th:if="${invalid == 'yes'}" class="incorrect__login">Incorrect login or password please try again</div>
+            <div class="form-group">
+                <label for="inputName">Name</label>
+                <input type="text" class="form-control" id="inputName" aria-describedby="nameHelp" name="login"
+                       required>
+                <small id="nameHelp" class="form-text text-muted">We'll never share your login with anyone else.</small>
+            </div>
+            <div class="form-group">
+                <label for="inputPassword">Password</label>
+                <input type="password" class="form-control" id="inputPassword" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary button">Login</button>
+        </form>
+    </div>
+</main>
+
+<div th:replace="fragment/footer.html :: footer"></div>
+</body>
+<div th:replace="fragment/script.html :: script"></div>
+</html>

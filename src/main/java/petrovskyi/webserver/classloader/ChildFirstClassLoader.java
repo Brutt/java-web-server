@@ -9,6 +9,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ChildFirstClassLoader extends URLClassLoader {
+    public ChildFirstClassLoader(URL[] urls) {
+        super(urls);
+    }
 
     public ChildFirstClassLoader(URL[] urls, ClassLoader parent) {
         super(urls, parent);
