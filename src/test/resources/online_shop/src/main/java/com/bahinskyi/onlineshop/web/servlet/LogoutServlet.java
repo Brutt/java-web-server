@@ -1,7 +1,7 @@
 package com.bahinskyi.onlineshop.web.servlet;
 
-import com.bahinskyi.onlineshop.security.entity.Session;
 import com.bahinskyi.onlineshop.security.SecurityService;
+import com.bahinskyi.onlineshop.security.entity.Session;
 import com.bahinskyi.onlineshop.web.ServiceLocator;
 
 import javax.servlet.http.Cookie;

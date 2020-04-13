@@ -37,7 +37,7 @@ public class CartServlet extends HttpServlet {
             paramsMap.put("cartItems", cartItems);
             paramsMap.put("totalCount", cartItemService.totalSum(cartItems));
 
-            pageGenerator.process(CART_TEMPLATE, paramsMap, response.getWriter());
+            pageGenerator.process(request, response, CART_TEMPLATE, paramsMap);
         } catch (IOException e) {
             throw new RuntimeException("AllProductsServlet error", e);
         }

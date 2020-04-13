@@ -11,15 +11,15 @@
                 aria-controls="navbarTogglerDemo03" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <a class="navbar-brand nav__font" href="products">All products</a>
+        <a class="navbar-brand nav__font" th:href="@{/products}">All products</a>
 
         <div class="collapse navbar-collapse " id="navbarTogglerDemo03">
             <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link" href="products">Products <span class="sr-only">(current)</span></a>
+                    <a class="nav-link" th:href="@{/products}">Products <span class="sr-only">(current)</span></a>
                 </li>
                 <li th:if="${userRole == 'ADMIN'}" class="nav-item">
-                    <a class="nav-link" href="product/add">Add new product</a>
+                    <a class="nav-link" th:href="@{/product/add}">Add new product</a>
                 </li>
             </ul>
             <div class="nav__logo">Bookelk</div>
@@ -28,13 +28,13 @@
                 <div th:utext="'Hello, ' + ${login}"></div>
             </form>
             <form th:if="${userRole == 'GUEST'}" class="form-inline my-2 my-lg-0 nav__logout-button">
-                <a href="login" class="btn btn-submit btn-outline-light button button__login">Login</a>
+                <a th:href="@{/login}" class="btn btn-submit btn-outline-light button button__login">Login</a>
             </form>
-            <form th:if="${userRole != 'GUEST' and userRole != null}"class="form-inline my-2 my-lg-0 nav__logout-button" action="logout" method="post">
+            <form th:if="${userRole != 'GUEST' and userRole != null}"class="form-inline my-2 my-lg-0 nav__logout-button" th:action="@{/logout}" method="post">
                 <button class="btn btn-outline-light my-2 my-sm-0" type="submit">Logout</button>
             </form>
             <form>
-                <a class="nav__link" href="cart"><i class="fas fa-shopping-basket"></i></a>
+                <a class="nav__link" th:href="@{/cart}"><i class="fas fa-shopping-basket"></i></a>
             </form>
 
         </div>

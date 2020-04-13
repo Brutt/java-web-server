@@ -20,10 +20,12 @@
         <div class="row content">
             <div class="col-sm-6 col-md-4 col-lg-3 mb-5 d-flex cards__item" th:each="product : ${products}">
                 <div class="card">
-                    <img class="card__img" th:src="${product.pathToImage}" alt="product images">
+                    <img class="card__img"
+                         th:src="@{/static/pictures} +'/'+${product.pathToImage}"
+                         alt="product images">
                     <div class="card-body card__info">
                         <div class="card-title"
-                           th:utext="${product.productName}"></div>
+                             th:utext="${product.productName}"></div>
                     </div>
                     <div class="card-body card__button">
                         <div th:unless="${userRole == 'GUEST'}">

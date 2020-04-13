@@ -3,6 +3,7 @@ package petrovskyi.webserver.web.http.response;
 import petrovskyi.webserver.web.stream.WebServerOutputStream;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.Cookie;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -18,7 +19,12 @@ public class WebServerServletResponse extends HttpServletResponseAdapter impleme
     }
 
     @Override
-    public void sendRedirect(String s) throws IOException {
+    public void addCookie(Cookie cookie) {
+        webServerOutputStream.addCookie(cookie);
+    }
+
+    @Override
+    public void sendRedirect(String s) {
         webServerOutputStream.sendRedirect(s);
     }
 
@@ -30,6 +36,11 @@ public class WebServerServletResponse extends HttpServletResponseAdapter impleme
     @Override
     public ServletOutputStream getOutputStream() {
         return webServerOutputStream;
+    }
+
+    @Override
+    public String encodeURL(String s) {
+        return s;
     }
 
     @Override

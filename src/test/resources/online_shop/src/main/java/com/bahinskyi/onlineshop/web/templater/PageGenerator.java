@@ -1,10 +1,14 @@
 package com.bahinskyi.onlineshop.web.templater;
 
 import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
+import org.thymeleaf.context.IContext;
+import org.thymeleaf.context.WebContext;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
-import java.io.Writer;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Locale;
 import java.util.Map;
 
 public class PageGenerator {
@@ -18,11 +22,9 @@ public class PageGenerator {
         return pageGenerator;
     }
 
-    public void process(String template, Map<String, Object> paramsMap, Writer writer) {
-        Context context = new Context();
-        context.setVariables(paramsMap);
-
-        templateEngine.process(template, context, writer);
+    public void process(HttpServletRequest request, HttpServletResponse response, String template, Map<String, Object> paramsMap) throws IOException {
+        IContext context = new WebContext(request, response, request.getServletContext(), Locale.getDefault(), paramsMap);
+        templateEngine.process(template, context, response.getWriter());
     }
 
     public PageGenerator() {

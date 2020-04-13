@@ -7,9 +7,12 @@ import petrovskyi.webserver.web.http.session.WebServerSession;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 @Slf4j
@@ -26,6 +29,7 @@ public class WebServerOutputStream extends ServletOutputStream {
     private boolean isStatusCodeSet = false;
     private HttpSession httpSession;
     private String appName;
+    private List<Cookie> cookieList = new CopyOnWriteArrayList<>();
 
     public volatile boolean onlyHeaders = false;
 
@@ -62,6 +66,7 @@ public class WebServerOutputStream extends ServletOutputStream {
         log.debug("Start successful response output");
         setMainHeader(HttpStatusCode.OK);
         setCookie(WebServerSession.SESSIONID, httpSession.getId(), "/");
+        setCookies();
     }
 
     public void setContentType(String s) {
@@ -102,11 +107,18 @@ public class WebServerOutputStream extends ServletOutputStream {
             setMainHeader(HttpStatusCode.REDIRECT_FOUND);
             addHeader("Location: " + s);
             setCookie(WebServerSession.SESSIONID, httpSession.getId(), "/");
+            setCookies();
             endHeaders();
             flush();
             onlyHeaders = true;
         } catch (IOException e) {
             log.error("Error while redirecting to {}", s, e);
+        }
+    }
+
+    private void setCookies() {
+        for (Cookie cookie : cookieList) {
+            setCookie(cookie.getName(), cookie.getValue(), cookie.getPath());
         }
     }
 
@@ -117,10 +129,14 @@ public class WebServerOutputStream extends ServletOutputStream {
                 String suffix = DigestUtils.sha1Hex(appName);
                 cookieName = key + "." + suffix;
             }
-            addHeader("Set-Cookie: " + cookieName + "=" + value + "; Path=" + path);
+            addHeader("Set-Cookie: " + cookieName + "=" + value + "; Path=" + (path == null ? "/" : path));
         } catch (IOException e) {
             log.error("Error setting cookie {}={}, path={}", cookieName, value, path, e);
         }
+    }
+
+    public void addCookie(Cookie cookie) {
+        cookieList.add(cookie);
     }
 
     private void setMainHeader(HttpStatusCode statusCode) {

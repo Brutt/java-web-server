@@ -7,11 +7,14 @@ import petrovskyi.webserver.web.http.HttpMethod;
 import petrovskyi.webserver.web.http.request.WebServerServletRequest;
 import petrovskyi.webserver.web.http.session.WebServerSession;
 
+import javax.servlet.http.Cookie;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 public class RequestParser {
@@ -29,6 +32,7 @@ public class RequestParser {
         if (request.getAppName() != null) {
             injectHeaders(request, socketReader);
             injectBody(request, socketReader);
+            injectCookies(request);
             injectSession(request);
         }
 
@@ -90,19 +94,14 @@ public class RequestParser {
     void injectSession(WebServerServletRequest request) {
         log.debug("Injecting session into request");
         WebServerSession webServerSession = null;
-        String cookies = request.getHeader("Cookie");
-        if (cookies != null) {
-            String[] cookieSplit = cookies.split("; ");
-            for (String cookie : cookieSplit) {
-                String[] keyValue = cookie.split("=");
 
-                String suffix = DigestUtils.sha1Hex(request.getAppName());
-                String sessionCookieName = WebServerSession.SESSIONID + "." + suffix;
+        String suffix = DigestUtils.sha1Hex(request.getAppName());
+        String sessionCookieName = WebServerSession.SESSIONID + "." + suffix;
 
-                if (sessionCookieName.equals(keyValue[0])) {
-                    webServerSession = sessionRegistry.getSession(request.getAppName(), keyValue[1]);
-                    break;
-                }
+        for (Cookie cookie : request.getCookies()) {
+            if (sessionCookieName.equals(cookie.getName())) {
+                webServerSession = sessionRegistry.getSession(request.getAppName(), cookie.getValue());
+                break;
             }
         }
 
@@ -114,5 +113,22 @@ public class RequestParser {
             log.debug("Session {} was found in registry", webServerSession);
         }
         request.setWebServerSession(webServerSession);
+    }
+
+    void injectCookies(WebServerServletRequest request) {
+        String cookieHeader = request.getHeader("Cookie");
+        if (cookieHeader != null) {
+            String[] cookieSplit = cookieHeader.split("; ");
+            List<Cookie> cookieList = new CopyOnWriteArrayList<>();
+
+            for (String cookie : cookieSplit) {
+                String[] keyValue = cookie.split("=");
+
+                if (keyValue.length == 2) {
+                    cookieList.add(new Cookie(keyValue[0], keyValue[1]));
+                }
+            }
+            request.setCookies(cookieList.toArray(new Cookie[0]));
+        }
     }
 }

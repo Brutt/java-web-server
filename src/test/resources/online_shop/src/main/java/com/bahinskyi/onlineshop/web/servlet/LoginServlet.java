@@ -1,8 +1,8 @@
 package com.bahinskyi.onlineshop.web.servlet;
 
-import com.bahinskyi.onlineshop.security.entity.Session;
 import com.bahinskyi.onlineshop.exception.LoginPasswordInvalidException;
 import com.bahinskyi.onlineshop.security.SecurityService;
+import com.bahinskyi.onlineshop.security.entity.Session;
 import com.bahinskyi.onlineshop.web.ServiceLocator;
 import com.bahinskyi.onlineshop.web.templater.PageGenerator;
 
@@ -25,7 +25,7 @@ public class LoginServlet extends HttpServlet {
         try {
             Map<String, Object> paramsMap = new HashMap<>();
 
-            pageGenerator.process(ALL_PRODUCTS_TEMPLATE_HTML, paramsMap, response.getWriter());
+            pageGenerator.process(request, response, ALL_PRODUCTS_TEMPLATE_HTML, paramsMap);
 
         } catch (IOException e) {
             throw new RuntimeException("AllProductsServlet error", e);
@@ -47,7 +47,7 @@ public class LoginServlet extends HttpServlet {
             } catch (LoginPasswordInvalidException e) {
                 Map<String, Object> paramsMap = new HashMap<>();
                 paramsMap.put("invalid", "yes");
-                pageGenerator.process(ALL_PRODUCTS_TEMPLATE_HTML, paramsMap, response.getWriter());
+                pageGenerator.process(request, response, ALL_PRODUCTS_TEMPLATE_HTML, paramsMap);
 
                 response.sendRedirect(request.getContextPath() + "/login");
             }

@@ -20,7 +20,7 @@
         <div class="product">
             <div class="column-xs-12 column-md-7">
                 <div>
-                    <img th:src="${product.pathToImage}">
+                    <img th:src="@{/static/pictures} +'/'+${product.pathToImage}">
                 </div>
             </div>
             <div class="column-xs-12 column-md-5 product__info">

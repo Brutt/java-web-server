@@ -1,6 +1,5 @@
 package com.bahinskyi.onlineshop.web.servlet;
 
-import com.bahinskyi.onlineshop.entity.User;
 import com.bahinskyi.onlineshop.security.entity.Session;
 import com.bahinskyi.onlineshop.service.CartItemService;
 import com.bahinskyi.onlineshop.web.ServiceLocator;
@@ -10,8 +9,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class AddCartServlet extends HttpServlet {
     private CartItemService cartItemService = ServiceLocator.getService(CartItemService.class);

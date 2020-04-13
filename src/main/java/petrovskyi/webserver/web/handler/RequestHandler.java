@@ -53,6 +53,7 @@ public class RequestHandler implements Runnable {
                 log.warn("Cannot find a servlet by URI {}", requestURI);
                 return;
             }
+            webServerServletRequest.setServletContext(httpServlet.getServletContext());
 
             WebServerOutputStream webServerOutputStream = new WebServerOutputStream(socket.getOutputStream(),
                     webServerServletRequest.getSession());
@@ -79,11 +80,21 @@ public class RequestHandler implements Runnable {
     private HttpServlet getHttpServlet(ApplicationInfo application, String requestURI) {
         log.debug("Getting servlet from application {} for uri {}", application, requestURI);
         HttpServlet httpServlet = application.getUrlToServlet().get(requestURI);
+        /*
+         Servlet 2.5 specification SRV.11:
+         The container will recursively try to match the longest path-prefix.
+         This is done by stepping down the path tree a directory at a time, using the ’/’ character as a path separator.
+         The longest match determines the servlet selected.
+        */
+        int longestMapping = 999;
         if (httpServlet == null) {
             for (String key : application.getUrlToServlet().keySet()) {
                 if (key.endsWith("*") && requestURI.startsWith(key.replace("*", ""))) {
-                    httpServlet = application.getUrlToServlet().get(key);
-                    break;
+                    int lengthOfMapping = requestURI.replace(key.replace("*", ""), "").length();
+                    if (longestMapping > lengthOfMapping) {
+                        httpServlet = application.getUrlToServlet().get(key);
+                    }
+                    longestMapping = lengthOfMapping;
                 }
             }
         }

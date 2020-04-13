@@ -37,7 +37,7 @@ public class ProductInfoServlet extends HttpServlet {
 
             paramsMap.put("product", product);
 
-            pageGenerator.process(PRODUCT_BY_ID_TEMPLATE_HTML, paramsMap, response.getWriter());
+            pageGenerator.process(request, response, PRODUCT_BY_ID_TEMPLATE_HTML, paramsMap);
 
         } catch (IOException e) {
             throw new RuntimeException("AllProductsServlet error", e);

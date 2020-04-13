@@ -37,7 +37,7 @@ public class EditProductServlet extends HttpServlet {
 
             paramsMap.put("product", product);
 
-            pageGenerator.process(EDIT_PRODUCT_TEMPLATE_HTML, paramsMap, response.getWriter());
+            pageGenerator.process(request, response, EDIT_PRODUCT_TEMPLATE_HTML, paramsMap);
         } catch (IOException e) {
             throw new RuntimeException("EditProductServlet doGet error", e);
         }

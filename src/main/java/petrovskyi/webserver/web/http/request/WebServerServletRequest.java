@@ -4,7 +4,10 @@ import lombok.Setter;
 import petrovskyi.webserver.web.http.HttpMethod;
 import petrovskyi.webserver.web.http.session.WebServerSession;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
+import java.util.HashMap;
 import java.util.Map;
 
 @Setter
@@ -15,7 +18,15 @@ public class WebServerServletRequest extends HttpServletRequestAdapter {
     private String appName;
     private Map<String, String> parameters;
     private WebServerSession webServerSession;
+    private ServletContext servletContext;
+    private Map<String, Object> attributes = new HashMap<>();
+    private Cookie[] cookies = new Cookie[0];
 
+
+    @Override
+    public Cookie[] getCookies() {
+        return cookies;
+    }
 
     @Override
     public String getHeader(String s) {
@@ -43,8 +54,18 @@ public class WebServerServletRequest extends HttpServletRequestAdapter {
     }
 
     @Override
+    public HttpSession getSession(boolean b) {
+        return webServerSession;
+    }
+
+    @Override
     public HttpSession getSession() {
         return webServerSession;
+    }
+
+    @Override
+    public Object getAttribute(String s) {
+        return attributes.get(s);
     }
 
     @Override
@@ -52,11 +73,22 @@ public class WebServerServletRequest extends HttpServletRequestAdapter {
         return parameters.get(s);
     }
 
-    public String getAppName() {
-        return appName;
+    @Override
+    public String getProtocol() {
+        return "HTTP/1.1";
     }
 
-    public void setAppName(String appName) {
-        this.appName = appName;
+    @Override
+    public void setAttribute(String s, Object o) {
+        attributes.put(s, o);
+    }
+
+    @Override
+    public ServletContext getServletContext() {
+        return servletContext;
+    }
+
+    public String getAppName() {
+        return appName;
     }
 }

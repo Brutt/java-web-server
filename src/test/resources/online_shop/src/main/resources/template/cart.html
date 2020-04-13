@@ -4,7 +4,6 @@
     <title>Online Products</title>
     <meta th:replace="fragment/head.html :: meta">
     <link th:replace="fragment/head.html :: link">
-<!--    <link rel="stylesheet" type="text/css" href="../static/css/style.css">-->
 </head>
 <body>
 <header class="header">
@@ -31,7 +30,7 @@
             </thead>
             <tbody>
             <th:block th:each="cartItem : ${cartItems}">
-                <td><img th:src="${cartItem.product.pathToImage}" alt="product images"></td>
+                <td><img th:src="@{/static/pictures} +'/'+${cartItem.product.pathToImage}" alt="product images"></td>
                 <td>
                     <div>
                         <div th:utext="${cartItem.product.productName}"></div>

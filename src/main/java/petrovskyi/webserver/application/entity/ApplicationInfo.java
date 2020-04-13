@@ -5,7 +5,6 @@ import lombok.Getter;
 
 import javax.servlet.Filter;
 import javax.servlet.http.HttpServlet;
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 

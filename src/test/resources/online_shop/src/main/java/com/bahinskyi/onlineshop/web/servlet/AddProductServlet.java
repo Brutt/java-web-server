@@ -31,7 +31,7 @@ public class AddProductServlet extends HttpServlet {
                 paramsMap.put("userRole", user.getUserRole().getUserRoleName());
             }
 
-            pageGenerator.process(ADD_PRODUCT_TEMPLATE_HTML, paramsMap, response.getWriter());
+            pageGenerator.process(request, response, ADD_PRODUCT_TEMPLATE_HTML, paramsMap);
         } catch (IOException e) {
             throw new RuntimeException("AddProductServlet doGet error", e);
         }
