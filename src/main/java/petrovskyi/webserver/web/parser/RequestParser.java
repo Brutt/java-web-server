@@ -8,8 +8,8 @@ import petrovskyi.webserver.web.http.request.WebServerServletRequest;
 import petrovskyi.webserver.web.http.session.WebServerSession;
 
 import javax.servlet.http.Cookie;
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,16 +19,27 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Slf4j
 public class RequestParser {
     private SessionRegistry sessionRegistry;
+    private BufferedInputStream bufferedInputStream;
+    private BufferedReader socketReader;
+    private long skipped;
 
-    public RequestParser(SessionRegistry sessionRegistry) {
+    public RequestParser(BufferedInputStream bufferedInputStream, BufferedReader socketReader, SessionRegistry sessionRegistry) {
+        this.bufferedInputStream = bufferedInputStream;
+        this.socketReader = socketReader;
         this.sessionRegistry = sessionRegistry;
     }
 
-    public WebServerServletRequest parseRequest(BufferedReader socketReader) throws IOException {
+    public WebServerServletRequest parseRequest() throws IOException {
         log.debug("Starting to parse request");
+
+        bufferedInputStream.mark(1024000);
+
         WebServerServletRequest request = new WebServerServletRequest();
-        String message = socketReader.readLine();
-        injectData(request, message);
+
+        String firstLine = socketReader.readLine();
+        incSkipped(firstLine);
+
+        injectData(request, firstLine);
         if (request.getAppName() != null) {
             injectHeaders(request, socketReader);
             injectBody(request, socketReader);
@@ -37,6 +48,10 @@ public class RequestParser {
         }
 
         return request;
+    }
+
+    private void incSkipped(String data) {
+        skipped += data.getBytes().length + 2;
     }
 
     void injectData(WebServerServletRequest request, String requestLine) {
@@ -56,6 +71,8 @@ public class RequestParser {
         Map<String, String> headers = new HashMap<>();
         String message;
         while (!(message = socketReader.readLine()).equals("")) {
+            incSkipped(message);
+
             String key = message.substring(0, message.indexOf(":"));
             String value = message.substring(message.indexOf(":") + 2);
             headers.put(key, value);
@@ -67,12 +84,32 @@ public class RequestParser {
 
     void injectBody(WebServerServletRequest request, BufferedReader socketReader) throws IOException {
         log.debug("Injecting body into request");
-        String contentLength = request.getHeader("Content-Length");
-        if (contentLength == null || Integer.parseInt(contentLength) == 0) {
+
+        String contentLengthStr = request.getHeader("Content-Length");
+        if (contentLengthStr == null || Integer.parseInt(contentLengthStr) <= 0) {
+            return;
+        }
+        int contentLength = Integer.parseInt(contentLengthStr);
+
+        request.setContentLength(contentLength);
+
+        String contentTypeHeader = request.getHeader("Content-Type");
+        request.setContentType(contentTypeHeader);
+        if (contentTypeHeader != null && contentTypeHeader.contains("multipart/form-data")) {
+            bufferedInputStream.reset();
+            bufferedInputStream.skip(skipped+2);
+
+            ByteBuffer byteBuffer = ByteBuffer.allocate(contentLength);
+            while (bufferedInputStream.available() > 0) {
+                byteBuffer.put((byte) bufferedInputStream.read());
+            }
+
+            request.setCachedBody(byteBuffer.array());
+
             return;
         }
 
-        char[] buf = new char[Integer.parseInt(contentLength)];
+        char[] buf = new char[contentLength];
         socketReader.read(buf);
 
         String params = String.valueOf(buf);

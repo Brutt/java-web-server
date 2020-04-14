@@ -30,7 +30,7 @@ class RequestParserTest {
     void injectData() {
         String data = "GET /test/hello HTTP/1.1";
 
-        RequestParser requestParser = new RequestParser(new SessionRegistry());
+        RequestParser requestParser = new RequestParser(null, null, new SessionRegistry());
         requestParser.injectData(request, data);
 
         assertEquals(HttpMethod.GET.name(), request.getMethod());
@@ -42,7 +42,7 @@ class RequestParserTest {
     void testFavicon() {
         String data = "GET /favicon.ico HTTP/1.1";
 
-        RequestParser requestParser = new RequestParser(new SessionRegistry());
+        RequestParser requestParser = new RequestParser(null, null, new SessionRegistry());
         requestParser.injectData(request, data);
 
         assertEquals(HttpMethod.GET.name(), request.getMethod());
@@ -60,7 +60,7 @@ class RequestParserTest {
         headers.put("Content-Length", String.valueOf(test.length()));
         request.setHeaders(headers);
 
-        RequestParser requestParser = new RequestParser(new SessionRegistry());
+        RequestParser requestParser = new RequestParser(null, null, new SessionRegistry());
         requestParser.injectBody(request, reader);
 
         assertEquals("login", request.getParameter("name"));
@@ -74,7 +74,7 @@ class RequestParserTest {
         Reader inputString = new StringReader(test);
         BufferedReader reader = new BufferedReader(inputString);
 
-        RequestParser requestParser = new RequestParser(new SessionRegistry());
+        RequestParser requestParser = new RequestParser(null, null, new SessionRegistry());
         requestParser.injectHeaders(request, reader);
 
         assertEquals("test.com", request.getHeader("Host"));
@@ -89,7 +89,7 @@ class RequestParserTest {
         Reader inputString = new StringReader(test);
         BufferedReader reader = new BufferedReader(inputString);
 
-        RequestParser requestParser = new RequestParser(new SessionRegistry());
+        RequestParser requestParser = new RequestParser(null, null, new SessionRegistry());
         requestParser.injectHeaders(request, reader);
     }
 
@@ -102,7 +102,8 @@ class RequestParserTest {
         request.setAppName("app1");
         injectCookieHeader();
 
-        RequestParser requestParser = new RequestParser(sessionRegistry);
+        RequestParser requestParser = new RequestParser(null, null, sessionRegistry);
+        requestParser.injectCookies(request);
         requestParser.injectSession(request);
 
         HttpSession session = request.getSession();
@@ -117,7 +118,7 @@ class RequestParserTest {
         request.setAppName("app1");
         request.setHeaders(new HashMap<>());
 
-        RequestParser requestParser = new RequestParser(sessionRegistry);
+        RequestParser requestParser = new RequestParser(null, null, sessionRegistry);
         requestParser.injectSession(request);
 
         HttpSession session = request.getSession();

@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory;
 import petrovskyi.webserver.application.registry.ApplicationRegistry;
 import petrovskyi.webserver.session.SessionRegistry;
 import petrovskyi.webserver.util.PropertyHolder;
-import petrovskyi.webserver.webapp.WebAppDirector;
 import petrovskyi.webserver.web.handler.RequestHandler;
+import petrovskyi.webserver.webapp.WebAppDirector;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -91,7 +91,7 @@ public class Server {
         LOG.info("Server is " + (requestHandlerThreadPool.isShutdown() ? "shutdown" : "still running"));
     }
 
-    private ThreadFactory createThreadFactory(){
+    private ThreadFactory createThreadFactory() {
         return runnable -> {
             Thread thread = new Thread(runnable);
             thread.setName("RequestHandler");

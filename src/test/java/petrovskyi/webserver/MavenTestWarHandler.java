@@ -19,7 +19,8 @@ import java.util.stream.Stream;
 public class MavenTestWarHandler {
     //private String appName = "simple";
     //private String appName = "simple_post_and_filters";
-    private String appName = "online_shop";
+    //private String appName = "online_shop";
+    private String appName = "simple_post_multipart";
 
     private void createTestWar() throws MavenInvocationException {
         log.info("Start to create test war");
@@ -63,7 +64,7 @@ public class MavenTestWarHandler {
     }
 
     // uncomment to build test app
-    @Test
+    //@Test
     public void startServerWithTestWar() throws MavenInvocationException, IOException {
         createTestWar();
         copyTestWarToWebapps();

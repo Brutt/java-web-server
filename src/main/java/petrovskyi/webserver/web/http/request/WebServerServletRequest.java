@@ -2,11 +2,14 @@ package petrovskyi.webserver.web.http.request;
 
 import lombok.Setter;
 import petrovskyi.webserver.web.http.HttpMethod;
+import petrovskyi.webserver.web.http.request.inputstream.CachedBodyServletInputStream;
 import petrovskyi.webserver.web.http.session.WebServerSession;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +24,14 @@ public class WebServerServletRequest extends HttpServletRequestAdapter {
     private ServletContext servletContext;
     private Map<String, Object> attributes = new HashMap<>();
     private Cookie[] cookies = new Cookie[0];
+    private String contentType;
+    private int contentLength;
+    private byte[] cachedBody;
 
+    @Override
+    public ServletInputStream getInputStream() throws IOException {
+        return new CachedBodyServletInputStream(this.cachedBody);
+    }
 
     @Override
     public Cookie[] getCookies() {
@@ -69,6 +79,21 @@ public class WebServerServletRequest extends HttpServletRequestAdapter {
     }
 
     @Override
+    public String getCharacterEncoding() {
+        return "UTF-8";
+    }
+
+    @Override
+    public int getContentLength() {
+        return contentLength;
+    }
+
+    @Override
+    public String getContentType() {
+        return contentType;
+    }
+
+    @Override
     public String getParameter(String s) {
         return parameters.get(s);
     }
@@ -91,4 +116,5 @@ public class WebServerServletRequest extends HttpServletRequestAdapter {
     public String getAppName() {
         return appName;
     }
+
 }
