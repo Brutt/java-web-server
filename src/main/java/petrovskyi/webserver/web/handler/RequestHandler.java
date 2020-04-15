@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import petrovskyi.webserver.application.entity.ApplicationInfo;
 import petrovskyi.webserver.application.registry.ApplicationRegistry;
 import petrovskyi.webserver.session.SessionRegistry;
+import petrovskyi.webserver.web.filter.chain.WebServerFilterChain;
 import petrovskyi.webserver.web.http.request.WebServerServletRequest;
 import petrovskyi.webserver.web.http.response.WebServerServletResponse;
 import petrovskyi.webserver.web.parser.RequestParser;
@@ -16,8 +17,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 public class RequestHandler implements Runnable {
@@ -60,19 +60,18 @@ public class RequestHandler implements Runnable {
             }
             webServerServletRequest.setServletContext(httpServlet.getServletContext());
 
-            WebServerOutputStream webServerOutputStream = new WebServerOutputStream(socket.getOutputStream(),
-                    webServerServletRequest.getSession());
-            webServerOutputStream.setAppName(application.getName());
-            try (WebServerServletResponse webServerServletResponse = new WebServerServletResponse(webServerOutputStream);) {
-                List<Filter> filters = getFilters(application, requestURI);
+            try(WebServerOutputStream webServerOutputStream = new WebServerOutputStream(socket.getOutputStream(),
+                    webServerServletRequest.getSession());) {
+                webServerOutputStream.setAppName(application.getName());
+                try (WebServerServletResponse webServerServletResponse = new WebServerServletResponse(webServerOutputStream);) {
+                    Queue<Filter> filters = getFilters(application, requestURI);
 
-                for (Filter filter : filters) {
-                    filter.doFilter(webServerServletRequest, webServerServletResponse, (servletRequest, servletResponse) -> {
-                    });
-                }
+                    WebServerFilterChain webServerFilterChain = new WebServerFilterChain(filters);
+                    webServerFilterChain.doFilter(webServerServletRequest, webServerServletResponse);
 
-                if (!webServerOutputStream.onlyHeaders) {
-                    httpServlet.service(webServerServletRequest, webServerServletResponse);
+                    if (!webServerOutputStream.isRedirected) {
+                        httpServlet.service(webServerServletRequest, webServerServletResponse);
+                    }
                 }
             }
         } catch (Exception e) {
@@ -105,18 +104,21 @@ public class RequestHandler implements Runnable {
         return httpServlet;
     }
 
-    List<Filter> getFilters(ApplicationInfo application, String requestURI) {
+    Queue<Filter> getFilters(ApplicationInfo application, String requestURI) {
         log.debug("Getting filters from application {} for uri {}", application, requestURI);
-        List<Filter> filters = new ArrayList<>();
+        Queue<Filter> filters = new LinkedList<>();
 
-        if (application.getUrlToFilters().get(requestURI) != null) {
-            filters.addAll(application.getUrlToFilters().get(requestURI));
-        }
+        Set<String> keys = application.getUrlToFilters().keySet();
+        TreeSet<String> sortedKeys = new TreeSet<>(keys);
 
-        for (String key : application.getUrlToFilters().keySet()) {
+        for (String key : sortedKeys) {
             if (key.endsWith("*") && requestURI.startsWith(key.replace("*", ""))) {
                 filters.addAll(application.getUrlToFilters().get(key));
             }
+        }
+
+        if (application.getUrlToFilters().get(requestURI) != null) {
+            filters.addAll(application.getUrlToFilters().get(requestURI));
         }
 
         return filters;

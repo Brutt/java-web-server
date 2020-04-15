@@ -46,21 +46,27 @@ public class Server {
 
         try {
             serverSocket = new ServerSocket(propertyHolder.getInt("server.port"));
+            LOG.info("Server is running on {}", serverSocket.getLocalSocketAddress());
             while (true) {
                 Socket accept = serverSocket.accept();
+
                 if (!isRunning) {
-                    serverSocket.close();
                     break;
                 }
+
                 requestHandlerThreadPool.execute(new RequestHandler(accept, applicationRegistry, sessionRegistry));
             }
-
         } catch (IOException e) {
             LOG.error("Error while starting the server", e);
             throw new RuntimeException("Error while starting the server", e);
+        } finally {
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                LOG.error("Error while closing server socket", e);
+                throw new RuntimeException("Error while closing server socket", e);
+            }
         }
-
-        LOG.debug("Server`s start method over");
     }
 
     public void stop() {

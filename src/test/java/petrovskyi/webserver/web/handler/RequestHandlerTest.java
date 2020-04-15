@@ -9,10 +9,7 @@ import petrovskyi.webserver.application.entity.ApplicationInfo;
 import javax.servlet.Filter;
 import javax.servlet.http.HttpServlet;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -61,7 +58,7 @@ class RequestHandlerTest {
 
     @Test
     void getFilters() {
-        List<Filter> filters = requestHandler.getFilters(applicationInfo, "/test1/test2");
+        Queue<Filter> filters = requestHandler.getFilters(applicationInfo, "/test1/test2");
 
         assertEquals(3, filters.size());
         Iterator<Filter> iterator = filters.iterator();
@@ -81,7 +78,7 @@ class RequestHandlerTest {
 
     @Test
     void testRootUrl() {
-        List<Filter> filters = requestHandler.getFilters(applicationInfo, "/hello");
+        Queue<Filter> filters = requestHandler.getFilters(applicationInfo, "/hello");
 
         assertEquals(2, filters.size());
         Iterator<Filter> iterator = filters.iterator();
