@@ -36,9 +36,7 @@ public class WebXmlHandler {
     public WebXmlDefinition handle(File dir) throws FileNotFoundException {
         String webXmlPath = find(dir);
 
-        WebXmlDefinition webXmlDefinition = parse(webXmlPath);
-
-        return webXmlDefinition;
+        return parse(webXmlPath);
     }
 
     String find(File dir) throws FileNotFoundException {
@@ -61,9 +59,7 @@ public class WebXmlHandler {
     private WebXmlDefinition parse(String webXmlPath) throws FileNotFoundException {
         LOG.info("Starting to parse {}", webXmlPath);
 
-        WebXmlDefinition webXmlDefinition = getWebXmlDefinition(new FileInputStream(webXmlPath));
-
-        return webXmlDefinition;
+        return getWebXmlDefinition(new FileInputStream(webXmlPath));
     }
 
     WebXmlDefinition getWebXmlDefinition(InputStream inputStream) {
@@ -152,7 +148,7 @@ public class WebXmlHandler {
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node node = nodeList.item(i);
                 if (node != null) {
-                    values.add(node.getTextContent());
+                    values.add(node.getTextContent().trim());
                 }
             }
         }

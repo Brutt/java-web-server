@@ -2,22 +2,23 @@ package petrovskyi.webserver.webapp.scanner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import petrovskyi.webserver.webapp.consumer.ConsumerWithTwoParams;
 import petrovskyi.webserver.webapp.entity.StartupArchiveAndFolder;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static petrovskyi.webserver.webapp.WebAppDirector.*;
+import static petrovskyi.webserver.webapp.WebAppDirector.WAR_EXTENSION;
+import static petrovskyi.webserver.webapp.WebAppDirector.WEBAPPS_DIR_NAME;
 
 public class WarScanner {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-    private Consumer<String> nextStepConsumer;
+    private ConsumerWithTwoParams<String, Boolean> nextStepConsumer;
 
-    public WarScanner(Consumer<String> nextStepConsumer) {
+    public WarScanner(ConsumerWithTwoParams<String, Boolean> nextStepConsumer) {
         this.nextStepConsumer = nextStepConsumer;
     }
 
@@ -33,7 +34,7 @@ public class WarScanner {
             watchService = FileSystems.getDefault().newWatchService();
 
             Path path = Paths.get(WEBAPPS_DIR_NAME);
-            path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
+            path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE);
         } catch (IOException e) {
             LOG.error("Error while registering watch service", e);
             throw new RuntimeException("Error while registering watch service", e);
@@ -47,10 +48,16 @@ public class WarScanner {
                 for (WatchEvent<?> event : key.pollEvents()) {
                     WatchEvent<Path> eventPath = (WatchEvent<Path>) event;
                     String warName = eventPath.context().toFile().getPath();
-                    if (warName.endsWith(WAR_EXTENSION)) {
-                        LOG.info("Catch war: " + warName);
+                    if (warName.endsWith(WAR_EXTENSION) || event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
+                        boolean needDelete = false;
+                        if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
+                            LOG.info("{} was deleted", warName);
+                            needDelete = true;
+                        } else {
+                            LOG.info("Catch war: {}", warName);
+                        }
 
-                        nextStepConsumer.accept(warName);
+                        nextStepConsumer.accept(warName, needDelete);
                     }
                 }
                 key.reset();
