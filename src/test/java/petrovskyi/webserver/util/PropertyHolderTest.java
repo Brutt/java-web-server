@@ -9,7 +9,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PropertyHolderTest {
-    private PropertyHolder propertyHolder = new PropertyHolder();
+    private PropertyHolder propertyHolder = new PropertyHolder(new HashMap<>());
 
     @BeforeEach
     void setUp() {

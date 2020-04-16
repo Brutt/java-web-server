@@ -12,18 +12,8 @@ import java.util.Map;
 public class PropertyHolder {
     private Map<String, Object> properties;
 
-    public void readPropertyFileFromResources(String fileName) {
-        properties = new YamlReader(fileName).getProperties();
-    }
-
-    public void readPropertyFileFromFS(String fileName) throws FileNotFoundException {
-        URL jarLocation = getClass().getProtectionDomain().getCodeSource().getLocation();
-        String jarFolderPath = new File(jarLocation.getPath()).getParent();
-        File fileWithPropertiesFS = new File(jarFolderPath, fileName);
-
-        log.debug("Try to read properties from {}", fileWithPropertiesFS);
-
-        properties = new YamlReader(new FileInputStream(fileWithPropertiesFS)).getProperties();
+    public PropertyHolder(Map<String, Object> properties) {
+        this.properties = properties;
     }
 
     public Integer getInt(String propertyName) {
