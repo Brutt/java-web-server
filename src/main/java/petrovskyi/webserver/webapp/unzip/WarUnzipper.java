@@ -4,16 +4,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Enumeration;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
-import static petrovskyi.webserver.webapp.WebAppDirector.*;
+import static petrovskyi.webserver.webapp.WebAppDirector.WAR_EXTENSION;
+import static petrovskyi.webserver.webapp.WebAppDirector.WEBAPPS_DIR_NAME;
 
 public class WarUnzipper {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
@@ -24,14 +25,10 @@ public class WarUnzipper {
 
         LOG.info("Try to unzip file: " + zipFilePath);
 
-        try {
-            ZipFile zipFile = new ZipFile(zipFilePath);
+        try (ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFilePath))) {
+            ZipEntry entry = zipIn.getNextEntry();
 
-            Enumeration<? extends ZipEntry> entries = zipFile.entries();
-
-            while (entries.hasMoreElements()) {
-                ZipEntry entry = entries.nextElement();
-
+            while (entry != null) {
                 File destPath = new File(unzipDir, entry.getName());
 
                 if (!isValidDestinationPath(unzipDir.getPath(), destPath.getPath())) {
@@ -43,8 +40,10 @@ public class WarUnzipper {
                 if (entry.isDirectory()) {
                     destPath.mkdirs();
                 } else {
-                    Files.copy(zipFile.getInputStream(entry), destPath.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(zipIn, destPath.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 }
+                zipIn.closeEntry();
+                entry = zipIn.getNextEntry();
             }
         } catch (IOException e) {
             LOG.error("Cannot unzip war file {}", zipFilePath, e);
