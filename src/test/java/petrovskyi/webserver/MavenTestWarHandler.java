@@ -64,7 +64,7 @@ public class MavenTestWarHandler {
     }
 
     // uncomment to build test app
-    @Test
+    //@Test
     public void startServerWithTestWar() throws MavenInvocationException, IOException {
         createTestWar();
         copyTestWarToWebapps();

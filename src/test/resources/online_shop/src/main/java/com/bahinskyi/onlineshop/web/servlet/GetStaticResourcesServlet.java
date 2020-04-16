@@ -14,7 +14,7 @@ public class GetStaticResourcesServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) {
-        String stylePath = request.getRequestURI().replace(request.getContextPath(),"").substring(1);
+        String stylePath = request.getRequestURI().replace(request.getContextPath(), "").substring(1);
         InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream(stylePath);
 
         if (resourceAsStream == null) {

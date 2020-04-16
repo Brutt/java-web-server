@@ -7,13 +7,14 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import petrovskyi.webserver.application.entity.ApplicationInfo;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
 import javax.servlet.http.HttpServlet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class ApplicationRegistryTest {
     private ApplicationRegistry applicationRegistry = new ApplicationRegistry();

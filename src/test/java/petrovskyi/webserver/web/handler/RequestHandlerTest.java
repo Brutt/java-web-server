@@ -8,10 +8,9 @@ import petrovskyi.webserver.application.entity.ApplicationInfo;
 
 import javax.servlet.Filter;
 import javax.servlet.http.HttpServlet;
-
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class RequestHandlerTest {
     @Mock
@@ -62,13 +61,13 @@ class RequestHandlerTest {
 
         assertEquals(3, filters.size());
         Iterator<Filter> iterator = filters.iterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             Filter next = iterator.next();
-            if(next.equals(filter1)){
+            if (next.equals(filter1)) {
                 iterator.remove();
-            }else if(next.equals(filter2)){
+            } else if (next.equals(filter2)) {
                 iterator.remove();
-            }else if(next.equals(filter4)){
+            } else if (next.equals(filter4)) {
                 iterator.remove();
             }
         }
@@ -82,11 +81,11 @@ class RequestHandlerTest {
 
         assertEquals(2, filters.size());
         Iterator<Filter> iterator = filters.iterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             Filter next = iterator.next();
-            if(next.equals(filter1)){
+            if (next.equals(filter1)) {
                 iterator.remove();
-            }else if(next.equals(filter2)){
+            } else if (next.equals(filter2)) {
                 iterator.remove();
             }
         }

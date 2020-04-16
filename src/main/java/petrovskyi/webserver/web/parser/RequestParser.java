@@ -2,34 +2,25 @@ package petrovskyi.webserver.web.parser;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
-import petrovskyi.webserver.session.SessionRegistry;
 import petrovskyi.webserver.web.http.HttpMethod;
 import petrovskyi.webserver.web.http.request.WebServerServletRequest;
 import petrovskyi.webserver.web.http.session.WebServerSession;
 
 import javax.servlet.http.Cookie;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 public class RequestParser {
-    private SessionRegistry sessionRegistry;
-    private BufferedInputStream bufferedInputStream;
-    private BufferedReader socketReader;
     private long skipped;
 
-    public RequestParser(BufferedInputStream bufferedInputStream, BufferedReader socketReader, SessionRegistry sessionRegistry) {
-        this.bufferedInputStream = bufferedInputStream;
-        this.socketReader = socketReader;
-        this.sessionRegistry = sessionRegistry;
-    }
-
-    public WebServerServletRequest parseRequest() throws IOException {
+    public WebServerServletRequest parseRequest(BufferedInputStream bufferedInputStream, BufferedReader socketReader) throws IOException {
         log.debug("Starting to parse request");
 
         bufferedInputStream.mark(1024000);
@@ -42,9 +33,9 @@ public class RequestParser {
         injectData(request, firstLine);
         if (request.getAppName() != null) {
             injectHeaders(request, socketReader);
-            injectBody(request, socketReader);
+            injectBody(request, socketReader, bufferedInputStream);
             injectCookies(request);
-            injectSession(request);
+            injectTempSessionCookie(request);
         }
 
         return request;
@@ -82,7 +73,7 @@ public class RequestParser {
         request.setHeaders(headers);
     }
 
-    void injectBody(WebServerServletRequest request, BufferedReader socketReader) throws IOException {
+    void injectBody(WebServerServletRequest request, BufferedReader socketReader, BufferedInputStream bufferedInputStream) throws IOException {
         log.debug("Injecting body into request");
 
         String contentLengthStr = request.getHeader("Content-Length");
@@ -97,7 +88,7 @@ public class RequestParser {
         request.setContentType(contentTypeHeader);
         if (contentTypeHeader != null && contentTypeHeader.contains("multipart/form-data")) {
             bufferedInputStream.reset();
-            bufferedInputStream.skip(skipped+2);
+            bufferedInputStream.skip(skipped + 2);
 
             ByteBuffer byteBuffer = ByteBuffer.allocate(contentLength);
             while (bufferedInputStream.available() > 0) {
@@ -128,7 +119,7 @@ public class RequestParser {
         log.debug("Map with parameters {} was injected", parameterMap);
     }
 
-    void injectSession(WebServerServletRequest request) {
+    void injectTempSessionCookie(WebServerServletRequest request) {
         log.debug("Injecting session into request");
         WebServerSession webServerSession = null;
 
@@ -137,19 +128,10 @@ public class RequestParser {
 
         for (Cookie cookie : request.getCookies()) {
             if (sessionCookieName.equals(cookie.getName())) {
-                webServerSession = sessionRegistry.getSession(request.getAppName(), cookie.getValue());
+                request.setTempSessionCookie(cookie.getValue());
                 break;
             }
         }
-
-        if (webServerSession == null) {
-            webServerSession = new WebServerSession(UUID.randomUUID().toString());
-            sessionRegistry.register(request.getAppName(), webServerSession);
-            log.debug("Session was not found. Create new session {}", webServerSession);
-        } else {
-            log.debug("Session {} was found in registry", webServerSession);
-        }
-        request.setWebServerSession(webServerSession);
     }
 
     void injectCookies(WebServerServletRequest request) {

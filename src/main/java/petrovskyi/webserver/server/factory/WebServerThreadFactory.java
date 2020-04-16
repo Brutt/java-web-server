@@ -6,28 +6,28 @@ import java.util.concurrent.ThreadFactory;
 
 @Slf4j
 public class WebServerThreadFactory implements ThreadFactory {
-        private final Thread.UncaughtExceptionHandler handler;
-        private int counter = 0;
-        private String prefix;
-        private boolean isDaemon;
+    private final Thread.UncaughtExceptionHandler handler;
+    private int counter = 0;
+    private String prefix;
+    private boolean isDaemon;
 
-        public WebServerThreadFactory(Thread.UncaughtExceptionHandler handler, String prefix, boolean isDaemon) {
-            this.handler = handler;
-            this.prefix = prefix;
-            this.isDaemon = isDaemon;
-        }
-
-        @Override
-        public Thread newThread(Runnable runnable) {
-            counter++;
-            String name = prefix + "-" + counter;
-
-            Thread thread = new Thread(runnable, name);
-            thread.setDaemon(isDaemon);
-            thread.setUncaughtExceptionHandler(handler);
-
-            log.trace("Thread {} was created", thread);
-
-            return thread;
-        }
+    public WebServerThreadFactory(Thread.UncaughtExceptionHandler handler, String prefix, boolean isDaemon) {
+        this.handler = handler;
+        this.prefix = prefix;
+        this.isDaemon = isDaemon;
     }
+
+    @Override
+    public Thread newThread(Runnable runnable) {
+        counter++;
+        String name = prefix + "-" + counter;
+
+        Thread thread = new Thread(runnable, name);
+        thread.setDaemon(isDaemon);
+        thread.setUncaughtExceptionHandler(handler);
+
+        log.trace("Thread {} was created", thread);
+
+        return thread;
+    }
+}

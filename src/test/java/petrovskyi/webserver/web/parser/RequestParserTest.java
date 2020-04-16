@@ -3,12 +3,10 @@ package petrovskyi.webserver.web.parser;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import petrovskyi.webserver.session.SessionRegistry;
 import petrovskyi.webserver.web.http.HttpMethod;
 import petrovskyi.webserver.web.http.request.WebServerServletRequest;
 import petrovskyi.webserver.web.http.session.WebServerSession;
 
-import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -16,7 +14,8 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class RequestParserTest {
     private WebServerServletRequest request;
@@ -30,7 +29,7 @@ class RequestParserTest {
     void injectData() {
         String data = "GET /test/hello HTTP/1.1";
 
-        RequestParser requestParser = new RequestParser(null, null, new SessionRegistry());
+        RequestParser requestParser = new RequestParser();
         requestParser.injectData(request, data);
 
         assertEquals(HttpMethod.GET.name(), request.getMethod());
@@ -42,7 +41,7 @@ class RequestParserTest {
     void testFavicon() {
         String data = "GET /favicon.ico HTTP/1.1";
 
-        RequestParser requestParser = new RequestParser(null, null, new SessionRegistry());
+        RequestParser requestParser = new RequestParser();
         requestParser.injectData(request, data);
 
         assertEquals(HttpMethod.GET.name(), request.getMethod());
@@ -60,8 +59,8 @@ class RequestParserTest {
         headers.put("Content-Length", String.valueOf(test.length()));
         request.setHeaders(headers);
 
-        RequestParser requestParser = new RequestParser(null, null, new SessionRegistry());
-        requestParser.injectBody(request, reader);
+        RequestParser requestParser = new RequestParser();
+        requestParser.injectBody(request, reader, null);
 
         assertEquals("login", request.getParameter("name"));
         assertEquals("123", request.getParameter("pass"));
@@ -74,7 +73,7 @@ class RequestParserTest {
         Reader inputString = new StringReader(test);
         BufferedReader reader = new BufferedReader(inputString);
 
-        RequestParser requestParser = new RequestParser(null, null, new SessionRegistry());
+        RequestParser requestParser = new RequestParser();
         requestParser.injectHeaders(request, reader);
 
         assertEquals("test.com", request.getHeader("Host"));
@@ -82,6 +81,7 @@ class RequestParserTest {
     }
 
     void injectCookieHeader() throws IOException {
+        request.setAppName("app1");
         String suffix = DigestUtils.sha1Hex(request.getAppName());
         String sessionCookieName = WebServerSession.SESSIONID + "." + suffix;
 
@@ -89,39 +89,29 @@ class RequestParserTest {
         Reader inputString = new StringReader(test);
         BufferedReader reader = new BufferedReader(inputString);
 
-        RequestParser requestParser = new RequestParser(null, null, new SessionRegistry());
+        RequestParser requestParser = new RequestParser();
         requestParser.injectHeaders(request, reader);
     }
 
     @Test
-    void injectSession() throws IOException {
-        WebServerSession webServerSession = new WebServerSession("123456");
-        SessionRegistry sessionRegistry = new SessionRegistry();
-        sessionRegistry.register("app1", webServerSession);
-
-        request.setAppName("app1");
+    void injectTempSessionCookie() throws IOException {
         injectCookieHeader();
 
-        RequestParser requestParser = new RequestParser(null, null, sessionRegistry);
+        RequestParser requestParser = new RequestParser();
         requestParser.injectCookies(request);
-        requestParser.injectSession(request);
+        requestParser.injectTempSessionCookie(request);
 
-        HttpSession session = request.getSession();
-        assertEquals(webServerSession, session);
-        assertEquals("123456", session.getId());
+        assertEquals("123456", request.getTempSessionCookie());
     }
 
     @Test
-    void injectNotFoundInRegistrySession() throws IOException {
-        SessionRegistry sessionRegistry = new SessionRegistry();
-
+    void injectNotFoundInRegistrySession() {
         request.setAppName("app1");
         request.setHeaders(new HashMap<>());
 
-        RequestParser requestParser = new RequestParser(null, null, sessionRegistry);
-        requestParser.injectSession(request);
+        RequestParser requestParser = new RequestParser();
+        requestParser.injectTempSessionCookie(request);
 
-        HttpSession session = request.getSession();
-        assertNotNull(sessionRegistry.getSession("app1", session.getId()));
+        assertNull(request.getTempSessionCookie());
     }
 }

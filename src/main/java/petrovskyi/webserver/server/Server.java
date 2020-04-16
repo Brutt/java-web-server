@@ -19,11 +19,13 @@ import java.util.concurrent.TimeUnit;
 
 public class Server {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-    private PropertyHolder propertyHolder;
-    private ExecutorService requestHandlerThreadPool;
+
     private ApplicationRegistry applicationRegistry = new ApplicationRegistry();
     private SessionRegistry sessionRegistry = new SessionRegistry();
     private volatile boolean isRunning = true;
+
+    private PropertyHolder propertyHolder;
+    private ExecutorService requestHandlerThreadPool;
     private ServerSocket serverSocket;
 
     public Server(PropertyHolder propertyHolder) {

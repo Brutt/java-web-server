@@ -1,13 +1,13 @@
 package petrovskyi.web.filter;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 
 public class LoginFilter implements Filter {
     private JsonElement test = JsonParser.parseString("{\"color\":\"yellow\",\"type\":\"renault\"}");

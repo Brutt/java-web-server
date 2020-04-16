@@ -1,5 +1,6 @@
 package petrovskyi.webserver.web.http.request;
 
+import lombok.Getter;
 import lombok.Setter;
 import petrovskyi.webserver.web.http.HttpMethod;
 import petrovskyi.webserver.web.http.request.inputstream.CachedBodyServletInputStream;
@@ -27,9 +28,11 @@ public class WebServerServletRequest extends HttpServletRequestAdapter {
     private String contentType;
     private int contentLength;
     private byte[] cachedBody;
+    @Getter
+    private String tempSessionCookie;
 
     @Override
-    public ServletInputStream getInputStream() throws IOException {
+    public ServletInputStream getInputStream() {
         return new CachedBodyServletInputStream(this.cachedBody);
     }
 

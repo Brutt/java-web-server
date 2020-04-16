@@ -66,7 +66,7 @@ public class HelloServlet extends HttpServlet {
                         try {
                             if (!item.isFormField()) {
                                 String fileName = new File(item.getName()).getName();
-                                if(fileName.isEmpty()){
+                                if (fileName.isEmpty()) {
                                     continue;
                                 }
                                 String filePath = uploadPath + File.separator + fileName;

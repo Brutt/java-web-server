@@ -48,7 +48,7 @@ public class DefaultCartItemService implements CartItemService {
         Iterator<CartItem> itemIterator = cartItemList.iterator();
         while (itemIterator.hasNext()) {
             CartItem cartItem = itemIterator.next();
-            if(cartItem.getProduct().equals(product)) {
+            if (cartItem.getProduct().equals(product)) {
                 itemIterator.remove();
                 break;
             }

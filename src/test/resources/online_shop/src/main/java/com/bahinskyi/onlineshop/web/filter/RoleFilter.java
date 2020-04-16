@@ -2,8 +2,8 @@ package com.bahinskyi.onlineshop.web.filter;
 
 import com.bahinskyi.onlineshop.entity.User;
 import com.bahinskyi.onlineshop.entity.UserRole;
-import com.bahinskyi.onlineshop.security.entity.Session;
 import com.bahinskyi.onlineshop.security.SecurityService;
+import com.bahinskyi.onlineshop.security.entity.Session;
 import com.bahinskyi.onlineshop.web.ServiceLocator;
 
 import javax.servlet.*;

@@ -25,7 +25,8 @@
             </div>
             <div class="column-xs-12 column-md-5 product__info">
                 <h1 th:utext="${product.productName}"></h1>
-                <div th:utext="'Price ' + ${#numbers.formatDecimal(product.price, 0, 2)} + ' $'" class="product__price"></div>
+                <div th:utext="'Price ' + ${#numbers.formatDecimal(product.price, 0, 2)} + ' $'"
+                     class="product__price"></div>
                 <div class="product__rating">
                     <div class="product__rating-amount" th:utext="${product.rating}"></div>
                     <i class="fas fa-star card__star star"></i>
@@ -38,12 +39,14 @@
                 </div>
                 <div class="product__buttons">
                     <form th:action="@{cart/{id}(id=${product.id})}" method="post" class="button__delete-position">
-                        <button class="btn btn-outline-dark my-2 my-sm-0 button__delete" type="submit">Add To Cart</button>
+                        <button class="btn btn-outline-dark my-2 my-sm-0 button__delete" type="submit">Add To Cart
+                        </button>
                     </form>
                     <a th:if="${userRole == 'ADMIN'}" th:href="@{'edit/' + ${product.id}}"
                        class="btn btn-submit btn-outline-dark product__add-to-cart button">Edit</a>
                 </div>
-                <form th:if="${userRole == 'ADMIN'}" th:action="@{delete/{id}(id=${product.id})}" method="post" class="button__delete-position">
+                <form th:if="${userRole == 'ADMIN'}" th:action="@{delete/{id}(id=${product.id})}" method="post"
+                      class="button__delete-position">
                     <button class="btn btn-outline-dark my-2 my-sm-0 button__delete" type="submit">Delete</button>
                 </form>
             </div>

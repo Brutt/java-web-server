@@ -1,10 +1,10 @@
 package com.bahinskyi.onlineshop.security.impl;
 
 import com.bahinskyi.onlineshop.entity.User;
-import com.bahinskyi.onlineshop.security.entity.Session;
 import com.bahinskyi.onlineshop.exception.LoginPasswordInvalidException;
-import com.bahinskyi.onlineshop.service.UserService;
 import com.bahinskyi.onlineshop.security.SecurityService;
+import com.bahinskyi.onlineshop.security.entity.Session;
+import com.bahinskyi.onlineshop.service.UserService;
 import com.bahinskyi.onlineshop.web.ServiceLocator;
 import org.apache.commons.codec.digest.DigestUtils;
 

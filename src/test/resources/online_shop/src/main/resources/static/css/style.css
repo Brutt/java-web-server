@@ -55,16 +55,16 @@ main {
     padding-left: 1rem;
 }
 
-.nav__logout-button{
+.nav__logout-button {
     padding-left: 2rem;
     padding-right: 2rem;
 }
 
-.nav__hello{
+.nav__hello {
     color: #f5f5f7;
 }
 
-.incorrect__login{
+.incorrect__login {
     color: red;
     text-align: center;
     font-size: 1.5rem;
@@ -176,28 +176,29 @@ main {
     border-color: #0072c6;
 }
 
-.button__login{
+.button__login {
     width: 80px;
 }
-.button__login:hover{
+
+.button__login:hover {
     color: #212529;
     background-color: #f8f9fa;
     border-color: #f8f9fa;
 }
 
-.button__delete{
+.button__delete {
     width: 176px;
     font-size: 1.5rem;
     height: 50px;
     float: right;
 }
 
-.button__delete:hover{
+.button__delete:hover {
     background-color: #0072c6;
     border-color: #0072c6;
 }
 
-.button__delete-position{
+.button__delete-position {
     padding-top: 1rem;
 }
 

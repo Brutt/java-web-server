@@ -43,7 +43,8 @@
                     <div th:utext="${cartItem.countProducts}"></div>
                 </td>
                 <td>
-                    <form th:action="@{cart/delete/{id}(id=${cartItem.product.id})}"  method="post" class="product-removal">
+                    <form th:action="@{cart/delete/{id}(id=${cartItem.product.id})}" method="post"
+                          class="product-removal">
                         <button class="remove-product">
                             Remove
                         </button>

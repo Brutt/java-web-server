@@ -8,17 +8,24 @@ import petrovskyi.webserver.web.filter.chain.WebServerFilterChain;
 import petrovskyi.webserver.web.http.request.WebServerServletRequest;
 import petrovskyi.webserver.web.http.response.WebServerServletResponse;
 import petrovskyi.webserver.web.parser.RequestParser;
-import petrovskyi.webserver.web.stream.WebServerOutputStream;
 import petrovskyi.webserver.web.reporter.WebServerExceptionReporter;
+import petrovskyi.webserver.web.stream.WebServerOutputStream;
 
 import javax.servlet.Filter;
 import javax.servlet.http.HttpServlet;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Set;
+import java.util.TreeSet;
 
 @Slf4j
 public class RequestHandler implements Runnable {
+    private static final RequestParser REQUEST_PARSER = new RequestParser();
     private Socket socket;
     private ApplicationRegistry applicationRegistry;
     private SessionRegistry sessionRegistry;
@@ -37,14 +44,15 @@ public class RequestHandler implements Runnable {
              BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream, 1024000);
              BufferedReader socketReader = new BufferedReader(new InputStreamReader(bufferedInputStream));) {
 
-            RequestParser requestParser = new RequestParser(bufferedInputStream, socketReader, sessionRegistry);
-            WebServerServletRequest webServerServletRequest = requestParser.parseRequest();
+            WebServerServletRequest webServerServletRequest = REQUEST_PARSER.parseRequest(bufferedInputStream, socketReader);
 
             ApplicationInfo application = applicationRegistry.getApplication(webServerServletRequest.getAppName());
             if (application == null) {
                 log.warn("Cannot find an application with the name {}", webServerServletRequest.getAppName());
                 return;
             }
+
+            sessionRegistry.injectSession(webServerServletRequest);
 
             log.info("Request to {} application", application.getName());
 
@@ -58,7 +66,7 @@ public class RequestHandler implements Runnable {
             }
             webServerServletRequest.setServletContext(httpServlet.getServletContext());
 
-            try(WebServerOutputStream webServerOutputStream = new WebServerOutputStream(socket.getOutputStream(),
+            try (WebServerOutputStream webServerOutputStream = new WebServerOutputStream(socket.getOutputStream(),
                     webServerServletRequest.getSession());) {
                 webServerOutputStream.setAppName(application.getName());
                 try (WebServerServletResponse webServerServletResponse = new WebServerServletResponse(webServerOutputStream);) {
@@ -71,7 +79,7 @@ public class RequestHandler implements Runnable {
                         if (!webServerOutputStream.isRedirected) {
                             httpServlet.service(webServerServletRequest, webServerServletResponse);
                         }
-                    }catch (Exception ex){
+                    } catch (Exception ex) {
                         WebServerExceptionReporter.reportException(socket, ex);
                     }
                 }

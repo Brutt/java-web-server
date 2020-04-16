@@ -7,8 +7,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import petrovskyi.webserver.webapp.entity.WebXmlObjectDefinition;
 import petrovskyi.webserver.webapp.entity.WebXmlDefinition;
+import petrovskyi.webserver.webapp.entity.WebXmlObjectDefinition;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;

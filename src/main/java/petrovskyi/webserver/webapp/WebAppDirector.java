@@ -25,10 +25,12 @@ public class WebAppDirector {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     public static final String WEBAPPS_DIR_NAME = "webapps";
     public static final String WAR_EXTENSION = ".war";
+
     private ApplicationInfoCreator applicationInfoCreator = new ApplicationInfoCreator();
-    private ApplicationRegistry applicationRegistry;
     private WebXmlHandler webXmlHandler = new WebXmlHandler();
     private WarUnzipper warUnzipper = new WarUnzipper();
+
+    private ApplicationRegistry applicationRegistry;
 
     public WebAppDirector(ApplicationRegistry applicationRegistry) {
         this.applicationRegistry = applicationRegistry;
@@ -37,7 +39,7 @@ public class WebAppDirector {
     public void manage() {
         LOG.info("Starting to manage webapps");
 
-        WarScanner warScanner = new WarScanner(this::preRunMainFlow);
+        WarScanner warScanner = new WarScanner(this::preRunFlow);
 
         warScanner.scan();
     }
@@ -51,7 +53,7 @@ public class WebAppDirector {
         guideAtStartup(startupArchiveAndFolder);
     }
 
-    private void preRunMainFlow(String warName, boolean needDelete) {
+    private void preRunFlow(String warName, boolean needDelete) {
         if (needDelete) {
             LOG.debug("Deleting war {} and removing an application based on this war", warName);
 
@@ -129,7 +131,7 @@ public class WebAppDirector {
         for (String warName : needUnzip) {
             String trueWarName = warName.replace(WEBAPPS_DIR_NAME + File.separator, "") + WAR_EXTENSION;
             LOG.debug("War {} need to be unzipped", trueWarName);
-            preRunMainFlow(trueWarName, false);
+            preRunFlow(trueWarName, false);
         }
 
         Collection<String> needRemove = CollectionUtils.removeAll(startupArchiveAndFolder.getFolders(), archivesWOExtension);

@@ -13,7 +13,7 @@ public class WebServerExceptionReporter {
     public static void reportException(Socket socket, Throwable throwable) {
         try (WebServerOutputStream webServerOutputStream = new WebServerOutputStream(socket.getOutputStream(), null)) {
             String errorHtml = "<h3>" + throwable +
-                    "<p>at: "+ Arrays.toString(throwable.getStackTrace()) + "</p></h3>";
+                    "<p>at: " + Arrays.toString(throwable.getStackTrace()) + "</p></h3>";
 
             webServerOutputStream.setContentType("text/html; charset=utf-8");
             webServerOutputStream.setContentLength(errorHtml.length());
