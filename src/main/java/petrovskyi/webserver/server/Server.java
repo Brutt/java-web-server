@@ -3,6 +3,7 @@ package petrovskyi.webserver.server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import petrovskyi.webserver.application.registry.ApplicationRegistry;
+import petrovskyi.webserver.server.factory.WebServerThreadFactory;
 import petrovskyi.webserver.session.SessionRegistry;
 import petrovskyi.webserver.util.PropertyHolder;
 import petrovskyi.webserver.web.handler.RequestHandler;
@@ -11,9 +12,9 @@ import petrovskyi.webserver.webapp.WebAppDirector;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 public class Server {
@@ -30,10 +31,13 @@ public class Server {
     }
 
     public void start() {
-        LOG.info("Server starts");
+        LOG.debug("Server starts");
 
         int threadCount = propertyHolder.getInt("server.thread_count");
-        requestHandlerThreadPool = Executors.newFixedThreadPool(threadCount, createThreadFactory());
+        WebServerExceptionHandler exceptionHandler = new WebServerExceptionHandler();
+        WebServerThreadFactory webServerThreadFactory =
+                new WebServerThreadFactory(exceptionHandler, "RequestHandler", true);
+        requestHandlerThreadPool = Executors.newFixedThreadPool(threadCount, webServerThreadFactory);
 
         WebAppDirector webAppDirector = new WebAppDirector(applicationRegistry);
 
@@ -49,7 +53,6 @@ public class Server {
             LOG.info("Server is running on {}", serverSocket.getLocalSocketAddress());
             while (true) {
                 Socket accept = serverSocket.accept();
-
                 if (!isRunning) {
                     break;
                 }
@@ -70,7 +73,7 @@ public class Server {
     }
 
     public void stop() {
-        LOG.info("Server is stopping now");
+        LOG.debug("Server is stopping now");
         isRunning = false;
 
         applicationRegistry.cleanAll();
@@ -79,7 +82,7 @@ public class Server {
         try {
             if (!requestHandlerThreadPool.awaitTermination(2000, TimeUnit.MILLISECONDS)) {
                 requestHandlerThreadPool.shutdownNow();
-                LOG.info("Trying to stop the server with shutdownNow");
+                LOG.debug("Trying to stop the server with shutdownNow");
             }
         } catch (InterruptedException e) {
             LOG.error("Error while stopping the server", e);
@@ -90,20 +93,20 @@ public class Server {
             //create new Socket to start process accept() method of serverSocket, thus interrupt it
             new Socket(serverSocket.getInetAddress(), serverSocket.getLocalPort());
         } catch (IOException e) {
-            LOG.error("Error trying to create new Socket", e);
-            throw new RuntimeException("Error trying to create new Socket", e);
+            LOG.error("Error trying to stop server socket", e);
+            throw new RuntimeException("Error trying to stop server socket", e);
         }
 
         LOG.info("Server is " + (requestHandlerThreadPool.isShutdown() ? "shutdown" : "still running"));
     }
 
-    private ThreadFactory createThreadFactory() {
-        return runnable -> {
-            Thread thread = new Thread(runnable);
-            thread.setName("RequestHandler");
-            thread.setDaemon(true);
 
-            return thread;
-        };
+    class WebServerExceptionHandler implements Thread.UncaughtExceptionHandler {
+        private final Logger LOG = LoggerFactory.getLogger(getClass());
+
+        @Override
+        public void uncaughtException(Thread thread, Throwable t) {
+            LOG.error("Uncaught exception is detected! {} at {}", t.getCause(), Arrays.toString(t.getCause().getStackTrace()));
+        }
     }
 }

@@ -30,6 +30,7 @@ public class WebServerOutputStream extends ServletOutputStream {
     private HttpSession httpSession;
     private String appName;
     private List<Cookie> cookieList = new CopyOnWriteArrayList<>();
+    private String contentLength;
 
     public volatile boolean isRedirected = false;
 
@@ -73,6 +74,10 @@ public class WebServerOutputStream extends ServletOutputStream {
         contentType = "Content-Type: " + s;
     }
 
+    public void setContentLength(int s) {
+        contentLength = "Content-Length: " + s;
+    }
+
     private void endHeaders() {
         log.debug("Set end of headers block");
         try {
@@ -113,6 +118,20 @@ public class WebServerOutputStream extends ServletOutputStream {
             isRedirected = true;
         } catch (IOException e) {
             log.error("Error while redirecting to {}", s, e);
+        }
+    }
+
+    public void sendErrorMessage(String error) {
+        log.debug("Sending the error {}", error);
+        try {
+            setMainHeader(HttpStatusCode.INTERNAL_SERVER_ERROR);
+            addHeader(contentType);
+            addHeader(contentLength);
+            endHeaders();
+            outputStream.write(error.getBytes());
+            flush();
+        } catch (IOException e) {
+            log.error("Error while sending error {}", error, e);
         }
     }
 

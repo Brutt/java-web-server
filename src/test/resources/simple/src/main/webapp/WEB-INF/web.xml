@@ -14,6 +14,11 @@
         <servlet-class>petrovskyi.web.JsonCarServlet</servlet-class>
     </servlet>
 
+    <servlet>
+        <servlet-name>ErrorServlet</servlet-name>
+        <servlet-class>petrovskyi.web.ErrorServlet</servlet-class>
+    </servlet>
+
     <servlet-mapping>
         <servlet-name>HelloServlet</servlet-name>
         <url-pattern>/</url-pattern>
@@ -23,6 +28,11 @@
     <servlet-mapping>
         <servlet-name>JsonCarServlet</servlet-name>
         <url-pattern>/car/json</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>ErrorServlet</servlet-name>
+        <url-pattern>/error</url-pattern>
     </servlet-mapping>
 
 </web-app>

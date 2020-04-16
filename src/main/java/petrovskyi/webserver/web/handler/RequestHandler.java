@@ -9,13 +9,11 @@ import petrovskyi.webserver.web.http.request.WebServerServletRequest;
 import petrovskyi.webserver.web.http.response.WebServerServletResponse;
 import petrovskyi.webserver.web.parser.RequestParser;
 import petrovskyi.webserver.web.stream.WebServerOutputStream;
+import petrovskyi.webserver.web.reporter.WebServerExceptionReporter;
 
 import javax.servlet.Filter;
 import javax.servlet.http.HttpServlet;
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.Socket;
 import java.util.*;
 
@@ -64,13 +62,17 @@ public class RequestHandler implements Runnable {
                     webServerServletRequest.getSession());) {
                 webServerOutputStream.setAppName(application.getName());
                 try (WebServerServletResponse webServerServletResponse = new WebServerServletResponse(webServerOutputStream);) {
-                    Queue<Filter> filters = getFilters(application, requestURI);
+                    try {
+                        Queue<Filter> filters = getFilters(application, requestURI);
 
-                    WebServerFilterChain webServerFilterChain = new WebServerFilterChain(filters);
-                    webServerFilterChain.doFilter(webServerServletRequest, webServerServletResponse);
+                        WebServerFilterChain webServerFilterChain = new WebServerFilterChain(filters);
+                        webServerFilterChain.doFilter(webServerServletRequest, webServerServletResponse);
 
-                    if (!webServerOutputStream.isRedirected) {
-                        httpServlet.service(webServerServletRequest, webServerServletResponse);
+                        if (!webServerOutputStream.isRedirected) {
+                            httpServlet.service(webServerServletRequest, webServerServletResponse);
+                        }
+                    }catch (Exception ex){
+                        WebServerExceptionReporter.reportException(socket, ex);
                     }
                 }
             }
