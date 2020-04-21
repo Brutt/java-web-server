@@ -10,6 +10,7 @@ import petrovskyi.webserver.session.SessionRegistry;
 import petrovskyi.webserver.util.PropertyHolder;
 import petrovskyi.webserver.web.handler.RequestHandler;
 import petrovskyi.webserver.webapp.WebAppDirector;
+import petrovskyi.webserver.webapp.webxml.exception.WebXmlNotFoundException;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -43,10 +44,10 @@ public class Server {
                 new WebServerThreadFactory(exceptionHandler, "RequestHandler", true);
         requestHandlerThreadPool = Executors.newFixedThreadPool(threadCount, webServerThreadFactory);
 
-        webAppDirectorFlow();
+        webAppDirectorFlow(true, exceptionHandler);
 
         Integer serverPort = propertyHolder.getInt("server.port");
-        try (ServerSocket localServerSocket = serverSocket = new ServerSocket(serverPort)){
+        try (ServerSocket localServerSocket = serverSocket = new ServerSocket(serverPort)) {
             LOG.info("Server is running on {}", localServerSocket.getLocalSocketAddress());
             while (true) {
                 Socket accept = localServerSocket.accept();
@@ -93,25 +94,33 @@ public class Server {
         LOG.info("Server is " + (requestHandlerThreadPool.isShutdown() ? "shutdown" : "still running"));
     }
 
-    private void webAppDirectorFlow() {
+    private void webAppDirectorFlow(boolean scanAtStartup, WebServerExceptionHandler exceptionHandler) {
+        LOG.debug("Start webapp director flow");
         WebAppDirector webAppDirector = new WebAppDirector(applicationRegistry);
-        webAppDirector.manageAtStartup();
+        if (scanAtStartup) {
+            webAppDirector.manageAtStartup();
+        }
 
         Thread webAppDirectorThread = new Thread(webAppDirector::manage);
         webAppDirectorThread.setDaemon(true);
         webAppDirectorThread.setName("WebAppDirector");
+        webAppDirectorThread.setUncaughtExceptionHandler(exceptionHandler);
         webAppDirectorThread.start();
     }
 
-    @Slf4j
-    static class WebServerExceptionHandler implements Thread.UncaughtExceptionHandler {
+    class WebServerExceptionHandler implements Thread.UncaughtExceptionHandler {
+        private final Logger LOG = LoggerFactory.getLogger(getClass());
+
         @Override
         public void uncaughtException(Thread thread, Throwable t) {
-            log.error("Uncaught exception is detected! {} at {}", t, Arrays.toString(t.getStackTrace()));
+            LOG.error("Uncaught exception is detected! {} at {}", t, Arrays.toString(t.getStackTrace()));
 
-            if(t instanceof WebServerStopException){
+            if (t instanceof WebServerStopException) {
                 //exception while stopping server
                 System.exit(0);
+            } else if (t instanceof WebXmlNotFoundException) {
+                //restart webapp flow
+                webAppDirectorFlow(false, this);
             }
         }
     }

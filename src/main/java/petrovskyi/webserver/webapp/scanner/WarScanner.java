@@ -62,7 +62,7 @@ public class WarScanner {
                 }
                 key.reset();
             } catch (InterruptedException e) {
-                LOG.info("Scan was interrupted");
+                LOG.error("Scan was interrupted", e);
 
                 try {
                     watchService.close();
@@ -75,7 +75,7 @@ public class WarScanner {
             }
         }
 
-        LOG.info("Scan over");
+        LOG.debug("Scan over");
     }
 
     public StartupArchiveAndFolder scanAtStartUp() {

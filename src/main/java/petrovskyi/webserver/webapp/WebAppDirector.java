@@ -12,6 +12,7 @@ import petrovskyi.webserver.webapp.entity.WebXmlDefinition;
 import petrovskyi.webserver.webapp.scanner.WarScanner;
 import petrovskyi.webserver.webapp.unzip.WarUnzipper;
 import petrovskyi.webserver.webapp.webxml.WebXmlHandler;
+import petrovskyi.webserver.webapp.webxml.exception.WebXmlNotFoundException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -110,7 +111,7 @@ public class WebAppDirector {
             return webXmlHandler.handle(unzipDir);
         } catch (FileNotFoundException e) {
             LOG.error("Cannot find web.xml in {}", unzipDir, e);
-            throw new RuntimeException("Cannot find web.xml in " + unzipDir, e);
+            throw new WebXmlNotFoundException("Cannot find web.xml in " + unzipDir, e);
         }
     }
 

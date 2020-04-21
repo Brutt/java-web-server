@@ -23,6 +23,8 @@ public class WarUnzipper {
         File zipFilePath = new File(WEBAPPS_DIR_NAME, warName);
         File unzipDir = new File(WEBAPPS_DIR_NAME, warName.replace(WAR_EXTENSION, ""));
 
+        LOG.trace("File {} exists {}", zipFilePath, zipFilePath.exists());
+
         LOG.info("Try to unzip file: " + zipFilePath);
 
         try (ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFilePath))) {
