@@ -10,7 +10,7 @@ import javax.servlet.http.Cookie;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,31 +18,43 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 public class RequestParser {
-    private long skipped;
+    private static final byte END_BYTES_COUNT = 2;
+    private static final String MULTIPART_CONTENT_TYPE = "multipart/form-data";
+    private static final int HTTP_HEADER_LENGTH_BUFFER = 16 * 1024; //16KB
 
-    public WebServerServletRequest parseRequest(BufferedInputStream bufferedInputStream, BufferedReader socketReader) throws IOException {
+    public WebServerServletRequest parseRequest(BufferedInputStream bufferedInputStream) throws IOException {
         log.debug("Starting to parse request");
 
-        bufferedInputStream.mark(1024000);
+        bufferedInputStream.mark(HTTP_HEADER_LENGTH_BUFFER);
 
         WebServerServletRequest request = new WebServerServletRequest();
 
+        BufferedReader socketReader = new BufferedReader(new InputStreamReader(bufferedInputStream));
+
         String firstLine = socketReader.readLine();
-        incSkipped(firstLine);
+        long skipped = getBytesCount(firstLine);
 
         injectData(request, firstLine);
-        if (request.getAppName() != null) {
-            injectHeaders(request, socketReader);
-            injectBody(request, socketReader, bufferedInputStream);
-            injectCookies(request);
-            injectTempSessionCookie(request);
+        if (request.getAppName() == null) {
+            return request;
         }
+
+        skipped += injectHeaders(request, socketReader);
+        injectContentTypeAndLength(request);
+        if (request.getContentType() != null && request.getContentType().contains(MULTIPART_CONTENT_TYPE)) {
+            injectMultipartBody(request, bufferedInputStream, skipped);
+        } else {
+            injectUrlencodedBody(request, socketReader);
+        }
+
+        injectCookies(request);
+        injectTempSessionCookie(request);
 
         return request;
     }
 
-    private void incSkipped(String data) {
-        skipped += data.getBytes().length + 2;
+    private long getBytesCount(String data) {
+        return data.getBytes().length + END_BYTES_COUNT;
     }
 
     void injectData(WebServerServletRequest request, String requestLine) {
@@ -57,50 +69,56 @@ public class RequestParser {
         }
     }
 
-    void injectHeaders(WebServerServletRequest request, BufferedReader socketReader) throws IOException {
+    long injectHeaders(WebServerServletRequest request, BufferedReader socketReader) throws IOException {
         log.debug("Injecting headers into request");
-        Map<String, String> headers = new HashMap<>();
-        String message;
-        while (!(message = socketReader.readLine()).equals("")) {
-            incSkipped(message);
+        long bytesCount = 0;
 
-            String key = message.substring(0, message.indexOf(":"));
-            String value = message.substring(message.indexOf(":") + 2);
+        Map<String, String> headers = new HashMap<>();
+        String header;
+        while (!(header = socketReader.readLine()).equals("")) {
+            bytesCount += getBytesCount(header);
+
+            String key = header.substring(0, header.indexOf(":"));
+            String value = header.substring(header.indexOf(":") + 2);
             headers.put(key, value);
             log.debug("Injecting header {} with value {} into request", key, value);
         }
 
         request.setHeaders(headers);
+
+        return bytesCount;
     }
 
-    void injectBody(WebServerServletRequest request, BufferedReader socketReader, BufferedInputStream bufferedInputStream) throws IOException {
-        log.debug("Injecting body into request");
+    void injectContentTypeAndLength(WebServerServletRequest request) {
+        log.debug("Injecting content-type and content length into request");
 
         String contentLengthStr = request.getHeader("Content-Length");
         if (contentLengthStr == null || Integer.parseInt(contentLengthStr) <= 0) {
             return;
         }
         int contentLength = Integer.parseInt(contentLengthStr);
-
         request.setContentLength(contentLength);
 
         String contentTypeHeader = request.getHeader("Content-Type");
         request.setContentType(contentTypeHeader);
-        if (contentTypeHeader != null && contentTypeHeader.contains("multipart/form-data")) {
-            bufferedInputStream.reset();
-            bufferedInputStream.skip(skipped + 2);
+    }
 
-            ByteBuffer byteBuffer = ByteBuffer.allocate(contentLength);
-            while (bufferedInputStream.available() > 0) {
-                byteBuffer.put((byte) bufferedInputStream.read());
-            }
+    void injectMultipartBody(WebServerServletRequest request, BufferedInputStream bufferedInputStream, long skipped) throws IOException {
+        log.debug("Injecting multipart body into request");
 
-            request.setCachedBody(byteBuffer.array());
+        bufferedInputStream.reset();
+        bufferedInputStream.skip(skipped + END_BYTES_COUNT);
 
-            return;
-        }
+        byte[] byteBuffer = new byte[request.getContentLength()];
+        bufferedInputStream.read(byteBuffer);
 
-        char[] buf = new char[contentLength];
+        request.setCachedBody(byteBuffer);
+    }
+
+    void injectUrlencodedBody(WebServerServletRequest request, BufferedReader socketReader) throws IOException {
+        log.debug("Injecting x-www-form-urlencoded body into request");
+
+        char[] buf = new char[request.getContentLength()];
         socketReader.read(buf);
 
         String params = String.valueOf(buf);
@@ -121,7 +139,6 @@ public class RequestParser {
 
     void injectTempSessionCookie(WebServerServletRequest request) {
         log.debug("Injecting session into request");
-        WebServerSession webServerSession = null;
 
         String suffix = DigestUtils.sha1Hex(request.getAppName());
         String sessionCookieName = WebServerSession.SESSIONID + "." + suffix;

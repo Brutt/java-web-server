@@ -32,8 +32,6 @@ public class WebServerOutputStream extends ServletOutputStream {
     private List<Cookie> cookieList = new CopyOnWriteArrayList<>();
     private String contentLength;
 
-    public volatile boolean isRedirected = false;
-
     public WebServerOutputStream(OutputStream outputStream, HttpSession httpSession) {
         this.outputStream = outputStream;
         this.httpSession = httpSession;
@@ -115,7 +113,6 @@ public class WebServerOutputStream extends ServletOutputStream {
             setCookies();
             endHeaders();
             flush();
-            isRedirected = true;
         } catch (IOException e) {
             log.error("Error while redirecting to {}", s, e);
         }

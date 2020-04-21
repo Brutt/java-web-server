@@ -7,18 +7,17 @@ import petrovskyi.webserver.web.http.HttpMethod;
 import petrovskyi.webserver.web.http.request.WebServerServletRequest;
 import petrovskyi.webserver.web.http.session.WebServerSession;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
+import javax.servlet.ServletInputStream;
+import java.io.*;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.StringJoiner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 class RequestParserTest {
     private WebServerServletRequest request;
+    private final RequestParser requestParser = new RequestParser();
 
     @BeforeEach
     void setUp() {
@@ -29,7 +28,6 @@ class RequestParserTest {
     void injectData() {
         String data = "GET /test/hello HTTP/1.1";
 
-        RequestParser requestParser = new RequestParser();
         requestParser.injectData(request, data);
 
         assertEquals(HttpMethod.GET.name(), request.getMethod());
@@ -41,7 +39,6 @@ class RequestParserTest {
     void testFavicon() {
         String data = "GET /favicon.ico HTTP/1.1";
 
-        RequestParser requestParser = new RequestParser();
         requestParser.injectData(request, data);
 
         assertEquals(HttpMethod.GET.name(), request.getMethod());
@@ -50,17 +47,14 @@ class RequestParserTest {
     }
 
     @Test
-    void injectBody() throws IOException {
+    void injectUrlencodedBody() throws IOException {
         String test = "name=login&pass=123";
         Reader inputString = new StringReader(test);
         BufferedReader reader = new BufferedReader(inputString);
 
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Content-Length", String.valueOf(test.length()));
-        request.setHeaders(headers);
+        request.setContentLength(test.length());
 
-        RequestParser requestParser = new RequestParser();
-        requestParser.injectBody(request, reader, null);
+        requestParser.injectUrlencodedBody(request, reader);
 
         assertEquals("login", request.getParameter("name"));
         assertEquals("123", request.getParameter("pass"));
@@ -73,7 +67,6 @@ class RequestParserTest {
         Reader inputString = new StringReader(test);
         BufferedReader reader = new BufferedReader(inputString);
 
-        RequestParser requestParser = new RequestParser();
         requestParser.injectHeaders(request, reader);
 
         assertEquals("test.com", request.getHeader("Host"));
@@ -89,7 +82,6 @@ class RequestParserTest {
         Reader inputString = new StringReader(test);
         BufferedReader reader = new BufferedReader(inputString);
 
-        RequestParser requestParser = new RequestParser();
         requestParser.injectHeaders(request, reader);
     }
 
@@ -97,7 +89,6 @@ class RequestParserTest {
     void injectTempSessionCookie() throws IOException {
         injectCookieHeader();
 
-        RequestParser requestParser = new RequestParser();
         requestParser.injectCookies(request);
         requestParser.injectTempSessionCookie(request);
 
@@ -109,9 +100,54 @@ class RequestParserTest {
         request.setAppName("app1");
         request.setHeaders(new HashMap<>());
 
-        RequestParser requestParser = new RequestParser();
         requestParser.injectTempSessionCookie(request);
 
         assertNull(request.getTempSessionCookie());
+    }
+
+    @Test
+    void injectMultipartBody() throws IOException {
+        String headContent = "POST / HTTP/1.1\r\n" +
+                "Host: localhost:8000\r\n" +
+                "Content-Type: multipart/form-data; boundary=---------------------------9051914041544843365972754266\r\n" +
+                "Content-Length: 554\r\n";
+        String bodyContent = "-----------------------------9051914041544843365972754266\r\n" +
+                "Content-Disposition: form-data; name=\"text\"\r\n" +
+                "\r\n" +
+                "text default\r\n" +
+                "-----------------------------9051914041544843365972754266\r\n" +
+                "Content-Disposition: form-data; name=\"file1\"; filename=\"a.txt\"\r\n" +
+                "Content-Type: text/plain\r\n" +
+                "\r\n" +
+                "Content of a.txt.\r\n" +
+                "\r\n" +
+                "-----------------------------9051914041544843365972754266\r\n" +
+                "Content-Disposition: form-data; name=\"file2\"; filename=\"a.html\"\r\n" +
+                "Content-Type: text/html\r\n" +
+                "\r\n" +
+                "<!DOCTYPE html><title>Content of a.html.</title>\r\n" +
+                "\r\n" +
+                "-----------------------------9051914041544843365972754266--";
+        String testHttpRequest = headContent + "\r\n" + bodyContent;
+
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(new ByteArrayInputStream(testHttpRequest.getBytes()));
+        bufferedInputStream.mark(16 * 1024);
+
+        long skipped = headContent.getBytes().length;
+
+        request.setContentLength(554);
+        request.setContentType("Content-Type: multipart/form-data; boundary=---------------------------9051914041544843365972754266");
+        requestParser.injectMultipartBody(request, bufferedInputStream, skipped);
+
+        ServletInputStream inputStream = request.getInputStream();
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+
+        StringJoiner stringJoiner = new StringJoiner("\r\n");
+        String output;
+        while ((output = bufferedReader.readLine()) != null) {
+            stringJoiner.add(output);
+        }
+
+        assertEquals(bodyContent, stringJoiner.toString());
     }
 }

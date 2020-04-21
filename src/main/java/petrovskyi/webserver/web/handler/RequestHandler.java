@@ -14,9 +14,8 @@ import petrovskyi.webserver.web.stream.WebServerOutputStream;
 import javax.servlet.Filter;
 import javax.servlet.http.HttpServlet;
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -41,10 +40,9 @@ public class RequestHandler implements Runnable {
         log.debug("Starting to handle new request");
 
         try (InputStream inputStream = socket.getInputStream();
-             BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream, 1024000);
-             BufferedReader socketReader = new BufferedReader(new InputStreamReader(bufferedInputStream));) {
+             BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)) {
 
-            WebServerServletRequest webServerServletRequest = REQUEST_PARSER.parseRequest(bufferedInputStream, socketReader);
+            WebServerServletRequest webServerServletRequest = REQUEST_PARSER.parseRequest(bufferedInputStream);
 
             ApplicationInfo application = applicationRegistry.getApplication(webServerServletRequest.getAppName());
             if (application == null) {
@@ -52,41 +50,40 @@ public class RequestHandler implements Runnable {
                 return;
             }
 
-            sessionRegistry.injectSession(webServerServletRequest);
-
-            log.info("Request to {} application", application.getName());
-
-            String requestURI = webServerServletRequest.getRequestURI();
-            log.info("Request to {} endpoint", requestURI);
-
-            HttpServlet httpServlet = getHttpServlet(application, requestURI);
-            if (httpServlet == null) {
-                log.warn("Cannot find a servlet by URI {}", requestURI);
-                return;
-            }
-            webServerServletRequest.setServletContext(httpServlet.getServletContext());
-
-            try (WebServerOutputStream webServerOutputStream = new WebServerOutputStream(socket.getOutputStream(),
-                    webServerServletRequest.getSession());) {
-                webServerOutputStream.setAppName(application.getName());
-                try (WebServerServletResponse webServerServletResponse = new WebServerServletResponse(webServerOutputStream);) {
-                    try {
-                        Queue<Filter> filters = getFilters(application, requestURI);
-
-                        WebServerFilterChain webServerFilterChain = new WebServerFilterChain(filters);
-                        webServerFilterChain.doFilter(webServerServletRequest, webServerServletResponse);
-
-                        if (!webServerOutputStream.isRedirected) {
-                            httpServlet.service(webServerServletRequest, webServerServletResponse);
-                        }
-                    } catch (Exception ex) {
-                        WebServerExceptionReporter.reportException(socket, ex);
-                    }
-                }
-            }
+            requestApplication(webServerServletRequest, application);
         } catch (Exception e) {
             log.error("Error while handling request", e);
             throw new RuntimeException("Error while handling request", e);
+        }
+    }
+
+    private void requestApplication(WebServerServletRequest webServerServletRequest, ApplicationInfo application) throws IOException {
+        log.info("Request to {} application", application.getName());
+
+        String requestURI = webServerServletRequest.getRequestURI();
+        log.info("Request to {} endpoint", requestURI);
+
+        HttpServlet httpServlet = getHttpServlet(application, requestURI);
+        if (httpServlet == null) {
+            log.warn("Cannot find a servlet by URI {}", requestURI);
+            return;
+        }
+        sessionRegistry.injectSession(webServerServletRequest);
+        webServerServletRequest.setServletContext(httpServlet.getServletContext());
+
+        try (WebServerOutputStream webServerOutputStream = new WebServerOutputStream(socket.getOutputStream(),
+                webServerServletRequest.getSession());) {
+            webServerOutputStream.setAppName(application.getName());
+            try (WebServerServletResponse webServerServletResponse = new WebServerServletResponse(webServerOutputStream);) {
+                try {
+                    Queue<Filter> filters = getFilters(application, requestURI);
+
+                    WebServerFilterChain webServerFilterChain = new WebServerFilterChain(filters, httpServlet);
+                    webServerFilterChain.doFilter(webServerServletRequest, webServerServletResponse);
+                } catch (Exception ex) {
+                    WebServerExceptionReporter.reportException(socket, ex);
+                }
+            }
         }
     }
 

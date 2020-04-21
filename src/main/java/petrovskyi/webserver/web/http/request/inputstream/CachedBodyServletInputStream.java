@@ -10,7 +10,6 @@ import java.io.InputStream;
 
 @Slf4j
 public class CachedBodyServletInputStream extends ServletInputStream {
-
     private InputStream cachedBodyInputStream;
 
     public CachedBodyServletInputStream(byte[] cachedBody) {
@@ -40,5 +39,10 @@ public class CachedBodyServletInputStream extends ServletInputStream {
     @Override
     public int read() throws IOException {
         return cachedBodyInputStream.read();
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        return cachedBodyInputStream.read(b, off, len);
     }
 }

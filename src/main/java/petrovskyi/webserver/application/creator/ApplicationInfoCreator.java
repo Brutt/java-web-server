@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import petrovskyi.webserver.application.entity.ApplicationInfo;
 import petrovskyi.webserver.classloader.ChildFirstClassLoader;
+import petrovskyi.webserver.web.filter.config.WebServerFilterConfig;
 import petrovskyi.webserver.web.servlet.config.WebServletConfig;
 import petrovskyi.webserver.web.servlet.context.WebServletContext;
 import petrovskyi.webserver.webapp.entity.WebXmlDefinition;
@@ -30,7 +31,6 @@ public class ApplicationInfoCreator {
     private static final String JAR = ".jar";
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-
     public ApplicationInfo create(String appDir, WebXmlDefinition webXmlDefinition) {
         String appName = appDir.substring(appDir.lastIndexOf("/") + 1);
         LOG.info("Start to create new application with name {}", appName);
@@ -47,8 +47,9 @@ public class ApplicationInfoCreator {
         Thread.currentThread().setContextClassLoader(classLoader);
 
         try {
-            urlToServlet = createUrlToServletMap(webXmlDefinition.getUrlToServletClassName(), classLoader);
-            urlToFilters = createUrlToFiltersMap(webXmlDefinition.getUrlToFiltersClassName(), classLoader);
+            WebServletContext webServletContext = new WebServletContext(classLoader);
+            urlToServlet = createUrlToServletMap(webXmlDefinition.getUrlToServletClassName(), classLoader, webServletContext);
+            urlToFilters = createUrlToFiltersMap(webXmlDefinition.getUrlToFiltersClassName(), classLoader, webServletContext);
         } finally {
             Thread.currentThread().setContextClassLoader(contextClassLoader);
         }
@@ -60,7 +61,9 @@ public class ApplicationInfoCreator {
         return applicationInfo;
     }
 
-    private Map<String, HttpServlet> createUrlToServletMap(Map<String, List<String>> urlToClassName, ChildFirstClassLoader classLoader) {
+    private Map<String, HttpServlet> createUrlToServletMap(Map<String, List<String>> urlToClassName,
+                                                           ChildFirstClassLoader classLoader,
+                                                           WebServletContext webServletContext) {
         LOG.debug("Start to transform urlToClassName map into urlToServlet");
         Map<String, HttpServlet> servletMap = new HashMap<>();
 
@@ -69,10 +72,7 @@ public class ApplicationInfoCreator {
                 Class<?> aClass = classLoader.loadClass(urlToClassName.get(url).get(0));
                 HttpServlet httpServlet = (HttpServlet) aClass.getDeclaredConstructor().newInstance();
 
-                WebServletContext webServletContext = new WebServletContext(classLoader);
-                WebServletConfig webServletConfig = new WebServletConfig(webServletContext);
-
-                httpServlet.init(webServletConfig);
+                httpServlet.init(new WebServletConfig(webServletContext));
 
                 servletMap.put(url, httpServlet);
                 LOG.debug("Servlet for class {} was successfully instantiated", aClass);
@@ -85,7 +85,9 @@ public class ApplicationInfoCreator {
         return servletMap;
     }
 
-    private Map<String, List<Filter>> createUrlToFiltersMap(Map<String, List<String>> urlToClassName, ChildFirstClassLoader classLoader) {
+    private Map<String, List<Filter>> createUrlToFiltersMap(Map<String, List<String>> urlToClassName,
+                                                            ChildFirstClassLoader classLoader,
+                                                            WebServletContext webServletContext) {
         LOG.debug("Start to transform urlToClassName map into urlToFilters");
         Map<String, List<Filter>> filtersMap = new HashMap<>();
 
@@ -94,6 +96,8 @@ public class ApplicationInfoCreator {
                 try {
                     Class<?> aClass = classLoader.loadClass(filterClassName);
                     Filter filter = (Filter) aClass.getDeclaredConstructor().newInstance();
+
+                    filter.init(new WebServerFilterConfig(webServletContext));
 
                     List<Filter> filterList = filtersMap.get(url);
                     if (filterList == null) {

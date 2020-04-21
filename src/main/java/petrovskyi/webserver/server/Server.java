@@ -1,8 +1,10 @@
 package petrovskyi.webserver.server;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import petrovskyi.webserver.application.registry.ApplicationRegistry;
+import petrovskyi.webserver.server.exception.WebServerStopException;
 import petrovskyi.webserver.server.factory.WebServerThreadFactory;
 import petrovskyi.webserver.session.SessionRegistry;
 import petrovskyi.webserver.util.PropertyHolder;
@@ -41,20 +43,13 @@ public class Server {
                 new WebServerThreadFactory(exceptionHandler, "RequestHandler", true);
         requestHandlerThreadPool = Executors.newFixedThreadPool(threadCount, webServerThreadFactory);
 
-        WebAppDirector webAppDirector = new WebAppDirector(applicationRegistry);
+        webAppDirectorFlow();
 
-        webAppDirector.manageAtStartup();
-
-        Thread webAppDirectorThread = new Thread(webAppDirector::manage);
-        webAppDirectorThread.setDaemon(true);
-        webAppDirectorThread.setName("WebAppDirector");
-        webAppDirectorThread.start();
-
-        try {
-            serverSocket = new ServerSocket(propertyHolder.getInt("server.port"));
-            LOG.info("Server is running on {}", serverSocket.getLocalSocketAddress());
+        Integer serverPort = propertyHolder.getInt("server.port");
+        try (ServerSocket localServerSocket = serverSocket = new ServerSocket(serverPort)){
+            LOG.info("Server is running on {}", localServerSocket.getLocalSocketAddress());
             while (true) {
-                Socket accept = serverSocket.accept();
+                Socket accept = localServerSocket.accept();
                 if (!isRunning) {
                     break;
                 }
@@ -64,18 +59,14 @@ public class Server {
         } catch (IOException e) {
             LOG.error("Error while starting the server", e);
             throw new RuntimeException("Error while starting the server", e);
-        } finally {
-            try {
-                serverSocket.close();
-            } catch (IOException e) {
-                LOG.error("Error while closing server socket", e);
-                throw new RuntimeException("Error while closing server socket", e);
-            }
         }
     }
 
     public void stop() {
         LOG.debug("Server is stopping now");
+
+        Thread.currentThread().setUncaughtExceptionHandler(new WebServerExceptionHandler());
+
         isRunning = false;
 
         applicationRegistry.cleanAll();
@@ -96,19 +87,32 @@ public class Server {
             new Socket(serverSocket.getInetAddress(), serverSocket.getLocalPort());
         } catch (IOException e) {
             LOG.error("Error trying to stop server socket", e);
-            throw new RuntimeException("Error trying to stop server socket", e);
+            throw new WebServerStopException("Error trying to stop server socket", e);
         }
 
         LOG.info("Server is " + (requestHandlerThreadPool.isShutdown() ? "shutdown" : "still running"));
     }
 
+    private void webAppDirectorFlow() {
+        WebAppDirector webAppDirector = new WebAppDirector(applicationRegistry);
+        webAppDirector.manageAtStartup();
 
-    class WebServerExceptionHandler implements Thread.UncaughtExceptionHandler {
-        private final Logger LOG = LoggerFactory.getLogger(getClass());
+        Thread webAppDirectorThread = new Thread(webAppDirector::manage);
+        webAppDirectorThread.setDaemon(true);
+        webAppDirectorThread.setName("WebAppDirector");
+        webAppDirectorThread.start();
+    }
 
+    @Slf4j
+    static class WebServerExceptionHandler implements Thread.UncaughtExceptionHandler {
         @Override
         public void uncaughtException(Thread thread, Throwable t) {
-            LOG.error("Uncaught exception is detected! {} at {}", t.getCause(), Arrays.toString(t.getCause().getStackTrace()));
+            log.error("Uncaught exception is detected! {} at {}", t, Arrays.toString(t.getStackTrace()));
+
+            if(t instanceof WebServerStopException){
+                //exception while stopping server
+                System.exit(0);
+            }
         }
     }
 }

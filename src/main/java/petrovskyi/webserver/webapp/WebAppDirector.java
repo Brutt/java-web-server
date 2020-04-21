@@ -67,6 +67,16 @@ public class WebAppDirector {
         }
     }
 
+    private void runMainFlow(File unzipDir) {
+        LOG.debug("Start to create and register new application based on unzipped directory {}", unzipDir);
+
+        WebXmlDefinition webXmlDefinition = getWebXmlDefinition(unzipDir);
+
+        ApplicationInfo applicationInfo = applicationInfoCreator.create(unzipDir.getPath(), webXmlDefinition);
+
+        applicationRegistry.register(applicationInfo);
+    }
+
     private void runDeleteFlow(String dirName) {
         LOG.debug("Removing everything related to {}", dirName);
 
@@ -93,16 +103,6 @@ public class WebAppDirector {
         } catch (IOException e) {
             LOG.error("Error while deleting {}", dirName, e);
         }
-    }
-
-    private void runMainFlow(File unzipDir) {
-        LOG.debug("Start to create and register new application based on unzipped directory {}", unzipDir);
-
-        WebXmlDefinition webXmlDefinition = getWebXmlDefinition(unzipDir);
-
-        ApplicationInfo applicationInfo = applicationInfoCreator.create(unzipDir.getPath(), webXmlDefinition);
-
-        applicationRegistry.register(applicationInfo);
     }
 
     private WebXmlDefinition getWebXmlDefinition(File unzipDir) {

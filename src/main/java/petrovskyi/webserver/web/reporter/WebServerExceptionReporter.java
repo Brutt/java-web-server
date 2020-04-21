@@ -12,7 +12,7 @@ public class WebServerExceptionReporter {
 
     public static void reportException(Socket socket, Throwable throwable) {
         try (WebServerOutputStream webServerOutputStream = new WebServerOutputStream(socket.getOutputStream(), null)) {
-            String errorHtml = "<h3>" + throwable +
+            String errorHtml = "<h3>" + throwable + " " + throwable.getCause() +
                     "<p>at: " + Arrays.toString(throwable.getStackTrace()) + "</p></h3>";
 
             webServerOutputStream.setContentType("text/html; charset=utf-8");
